@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-injector_path = "script/Injector.exe"
+injector_path = r"script\Injector.exe"
 
 # Function to Main.py
 def verification(impact_path, text):
@@ -16,7 +16,7 @@ def verification(impact_path, text):
         print("Failed to read the files!")
 
 def run_command(impact_path, mode):
-    bat_file_path = os.path.join("script", "HSR+Reshade.bat")
+    bat_file_path = os.path.join("script", "HSR+Script.bat")
     bat_content = f"""@echo off
     powershell -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted"
     powershell -Command "Start-Process -FilePath Injector.exe -ArgumentList 'StarRail.exe' -Verb RunAs"
@@ -25,22 +25,25 @@ def run_command(impact_path, mode):
     exit
     """
     
-    if not os.path.exists(bat_file_path):
+    try:
+        #if not os.path.exists(bat_file_path):
         with open(bat_file_path, "w") as bat_file:
             bat_file.write(bat_content)
-            print(f"Batch file created at: {bat_file_path}")
-    else:
-            print(f"{os.path.basename(bat_file_path)} already exists")
+            subprocess.run(['explorer', os.path.dirname(bat_file_path)])
+            print(f"Batch file created or updated at: {bat_file_path}")
 
-    if mode == True:
-        try:
-            subprocess.run(["powershell", "-Command", "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted"], check=True)
-            subprocess.run(["powershell", "-Command", f'Start-Process -FilePath "{injector_path}" -ArgumentList "StarRail.exe" -Verb RunAs'], check=True)
-            subprocess.run(["powershell", "-Command", f'Start-Process -FilePath "{impact_path}" -Verb RunAs'], check=True)
-            subprocess.run(["powershell", "-Command", "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Restricted"], check=True)
+    except (OSError, IOError, subprocess.CalledProcessError, Exception) as e:
+        print(f"An error occurred: {e}")
 
-        except subprocess.CalledProcessError as e:
-            print(f"An error occurred while executing the command: {e}")
+    #else:
+        #print(f"{os.path.basename(bat_file_path)} already exists")
+
+    #if mode == True:
+            #os.startfile(bat_file_path)
+            #subprocess.run([bat_file_path], check=True)
+
+    #else:
+        #print(f"An error occurred while executing the command: {e}")
 
 # Test
 #verification(r"C:\Games\Star Rail\Games")
