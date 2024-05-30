@@ -1,6 +1,2 @@
 # Auto detect text files and perform LF normalization
-<<<<<<< HEAD
-gui.js linguist-vendored=true
-=======
 * text=auto
->>>>>>> parent of 47dca0f (Update gitattributes)
