@@ -1,7 +1,9 @@
 from tkinter import *
 import customtkinter as ctk
+import threading
 import PIL.Image, PIL.ImageTk
 from core import run_command, verification
+from data import download_from_github
 
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
@@ -9,6 +11,7 @@ class Image_Frame(ctk.CTkFrame):
         self.char_image_1 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 1.png"), size=(256, 256))
         self.char_image_2 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 2.png"), size=(256, 256))
         self.char_image_3 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 3.png"), size=(256, 256))
+        self.char_image_4 = ctk.CTkImage(PIL.Image.open("assets/logo/Pom-Pom.png"), size=(256, 256))
         self.char_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
         self.char_label.place(relx=0.5, rely=0.45, anchor=CENTER)
 
@@ -62,17 +65,68 @@ class HSRS(ctk.CTk):
 
             def combined_action():
                 verification(self.path_entry.get(), self.text_1)
-                self.pages("finish_page")
+                self.pages("reshade_page")
 
             self.patch_button = ctk.CTkButton(self, text="Patch", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: combined_action())
             self.patch_button.configure(width=135, height=54, corner_radius=8)
             self.patch_button.place(relx=0.72, rely=0.85, anchor=CENTER)
 
-        elif stats == "finish_page":
+        elif stats == "reshade_page":
             self.frame.update_image(self.frame.char_image_3)
+            self.text_1.configure(text="Check the Reshade pack:")
+            self.path_entry.place_forget()
+            check_var_1 = ctk.StringVar(value="off")
+            check_var_2 = ctk.StringVar(value="off")
+            check_var_3 = ctk.StringVar(value="off")
+            check_var_4 = ctk.StringVar(value="off")
+
+            def check_download(*check_var):
+                config = [
+                    ("assets/icon", "Presets"),
+                    ("assets/fonts", "Presets"),
+                    ("assets/sound", "Presets"),
+                    ("css", "Presets")
+                ]
+                
+                threads = []
+                for i, c in enumerate(config):
+                    if check_var[i].get() == "on":
+                        thread = threading.Thread(target=download_from_github, args=("Dimitri-Matheus", "Snake", c[0], c[1]))
+                        threads.append(thread)
+                        thread.start()
+                
+                if threads:
+                    thread.join()
+                    self.text_1.configure(text="Pack downloaded!")
+                    self.patch_button.configure(text="Next", command=lambda: self.pages("finish_page"))
+
+            
+            self.checkbox_1 = ctk.CTkCheckBox(self, text="Standard", variable=check_var_1, onvalue="on", offvalue="off")
+            self.checkbox_1.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
+            self.checkbox_1.place(relx=0.63, rely=0.5, anchor=CENTER)
+
+            self.checkbox_2 = ctk.CTkCheckBox(self, text="Dark Reality", variable=check_var_2, onvalue="on", offvalue="off")
+            self.checkbox_2.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
+            self.checkbox_2.place(relx=0.83, rely=0.6, anchor=CENTER)
+
+            self.checkbox_3 = ctk.CTkCheckBox(self, text="Paimon Dark", variable=check_var_3, onvalue="on", offvalue="off")
+            self.checkbox_3.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
+            self.checkbox_3.place(relx=0.833, rely=0.5, anchor=CENTER)
+
+            self.checkbox_4 = ctk.CTkCheckBox(self, text="Immersive", variable=check_var_4, onvalue="on", offvalue="off")
+            self.checkbox_4.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
+            self.checkbox_4.place(relx=0.633, rely=0.6, anchor=CENTER)
+
+            self.patch_button.configure(text="Download", command=lambda: check_download(check_var_1, check_var_2, check_var_3, check_var_4))
+
+        elif stats == "finish_page":
+            self.frame.update_image(self.frame.char_image_4)
             radio_var = IntVar(value=2)
             self.text_1.configure(text="The game has been patched! \n Open the HSR+ file")
-            self.path_entry.place_forget()
+            self.checkbox_1.place_forget()
+            self.checkbox_2.place_forget()
+            self.checkbox_3.place_forget()
+            self.checkbox_4.place_forget()
 
             def combined_command():
                 if radio_var.get() == 1:
@@ -93,8 +147,6 @@ class HSRS(ctk.CTk):
             self.radiobutton_2.place(relx=0.73, rely=0.6, anchor=CENTER)
 
             self.patch_button.configure(text="Finish", command=lambda: combined_command())
-
-
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False

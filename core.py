@@ -3,7 +3,7 @@ import subprocess
 
 injector_path = r"script\Injector.exe"
 
-# Function to Main.py
+# Function to gui.py
 def verification(impact_path, text):
     missing_file = "Injector.exe" if not os.path.isfile(injector_path) else f"The specified file was not found!"
     if not os.path.isfile(injector_path) or not os.path.isfile(impact_path):
@@ -16,7 +16,7 @@ def verification(impact_path, text):
         print("Failed to read the files!")
 
 def run_command(impact_path, mode):
-    bat_file_path = os.path.join("script", "HSR+Script.bat")
+    bat_file_path = os.path.join("script", "HSR+.bat")
     bat_content = f"""@echo off
     powershell -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted"
     powershell -Command "Start-Process -FilePath Injector.exe -ArgumentList 'StarRail.exe' -Verb RunAs"
