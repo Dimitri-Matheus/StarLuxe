@@ -13,7 +13,9 @@ The best Reshade installer for this Honkai Star Rail
 ## How to use
 
 Extract the file and run `HSR+Script.exe` Once open, press **enter** to proceed to the next page. 
-Enter your game's path and select the desired Reshade pack. After completing all the steps, the application will create a file in the ***script/folder***
+Enter your game's path and select the desired Reshade pack. 
+
+After completing all the steps, the application will create a file in the ***script/folder***
 <p align="center">
 	<b>✧ Run HSR+.bat and enjoy ✧</b>
 </p>
@@ -60,23 +62,26 @@ thread = threading.Thread(target=download_from_github, args=("YOUR-GITHUB-NAME",
 </p>
 
 ### Support Playnite
-> Open Playnite.exe and add the attributes to the command line to open HSR+.bat
+> Open Playnite.exe and add HSR+.exe to the Path tab to open it
+
+![image](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/1612a5a0-7c4f-4117-9242-f682914ca196)
+
 
 ```
-✦ 
+✦ Commands coming soon...
 ```
 
 ---
 
 > [!WARNING]
-> Be aware that using Reshade may result in a ban, although the likelihood is low. Use at your own risk!
-> Sharing your UID may increase the risk of being banned in the game.
+> The use of Reshade may result in a ban, although the likelihood is low.
+> Use at your own risk! Sharing your UID may increase the risk of being banned in the game.
 
 #
 
 ## Contributing
 
-If you want to contribute to this project, open a new issue to discuss your idea or submit a pull request with the proposed changes.
+If you want to contribute to this project, open a new issue to discuss your idea or submit a pull request with the proposed changes
 
 ## Credits
 <p>
