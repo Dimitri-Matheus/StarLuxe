@@ -82,10 +82,10 @@ class HSRS(ctk.CTk):
 
             def check_download(*check_var):
                 config = [
-                    ("script/Preset_Github/", "script/Preset_Github"),
-                    ("script/Preset_Github/", "script/Preset_Github"),
-                    ("script/Preset_Github/", "script/Preset_Github"),
-                    ("script/Preset_Github/", "script/Preset_Github")
+                    ("script/Presets/Luminescence", "script/Presets"),
+                    ("script/Presets/AstralAura", "script/Presets"),
+                    ("script/Presets/Spectrum", "script/Presets"),
+                    ("script/Presets/Galactic", "script/Presets")
                 ]
                 
                 threads = []
