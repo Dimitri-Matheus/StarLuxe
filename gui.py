@@ -82,10 +82,10 @@ class HSRS(ctk.CTk):
 
             def check_download(*check_var):
                 config = [
-                    ("", "script/Presets"),
-                    ("", "script/Presets"),
-                    ("", "script/Presets"),
-                    ("", "script/Presets")
+                    ("script/Preset_Github/", "script/Preset_Github"),
+                    ("script/Preset_Github/", "script/Preset_Github"),
+                    ("script/Preset_Github/", "script/Preset_Github"),
+                    ("script/Preset_Github/", "script/Preset_Github")
                 ]
                 
                 threads = []
@@ -103,21 +103,21 @@ class HSRS(ctk.CTk):
                     self.patch_button.configure(text="Next", command=lambda: self.pages("finish_page"))
 
             
-            self.checkbox_1 = ctk.CTkCheckBox(self, text="Standard", variable=check_var_1, onvalue="on", offvalue="off")
+            self.checkbox_1 = ctk.CTkCheckBox(self, text="Luminescence", variable=check_var_1, onvalue="on", offvalue="off")
             self.checkbox_1.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_1.place(relx=0.63, rely=0.5, anchor=CENTER)
 
-            self.checkbox_2 = ctk.CTkCheckBox(self, text="Reality", variable=check_var_2, onvalue="on", offvalue="off")
+            self.checkbox_2 = ctk.CTkCheckBox(self, text="AstralAura", variable=check_var_2, onvalue="on", offvalue="off")
             self.checkbox_2.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
-            self.checkbox_2.place(relx=0.83, rely=0.6, anchor=CENTER)
+            self.checkbox_2.place(relx=0.61, rely=0.6, anchor=CENTER)
 
-            self.checkbox_3 = ctk.CTkCheckBox(self, text="Dark", variable=check_var_3, onvalue="on", offvalue="off")
+            self.checkbox_3 = ctk.CTkCheckBox(self, text="Spectrum", variable=check_var_3, onvalue="on", offvalue="off")
             self.checkbox_3.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
-            self.checkbox_3.place(relx=0.833, rely=0.5, anchor=CENTER)
+            self.checkbox_3.place(relx=0.83, rely=0.5, anchor=CENTER)
 
-            self.checkbox_4 = ctk.CTkCheckBox(self, text="Mistured", variable=check_var_4, onvalue="on", offvalue="off")
+            self.checkbox_4 = ctk.CTkCheckBox(self, text="Galactic", variable=check_var_4, onvalue="on", offvalue="off")
             self.checkbox_4.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
-            self.checkbox_4.place(relx=0.633, rely=0.6, anchor=CENTER)
+            self.checkbox_4.place(relx=0.83, rely=0.6, anchor=CENTER)
 
             self.patch_button.configure(text="Download", command=lambda: check_download(check_var_1, check_var_2, check_var_3, check_var_4))
 
