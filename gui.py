@@ -82,18 +82,20 @@ class HSRS(ctk.CTk):
 
             def check_download(*check_var):
                 config = [
-                    ("assets/icon", "Presets"),
-                    ("assets/fonts", "Presets"),
-                    ("assets/sound", "Presets"),
-                    ("css", "Presets")
+                    ("", "script/Presets"),
+                    ("", "script/Presets"),
+                    ("", "script/Presets"),
+                    ("", "script/Presets")
                 ]
                 
                 threads = []
                 for i, c in enumerate(config):
                     if check_var[i].get() == "on":
-                        thread = threading.Thread(target=download_from_github, args=("Dimitri-Matheus", "Snake", c[0], c[1]))
+                        thread = threading.Thread(target=download_from_github, args=("Dimitri-Matheus", "HSR-Script", c[0], c[1]))
                         threads.append(thread)
                         thread.start()
+                    if check_var[i].get() == "off":
+                        self.patch_button.configure(text="Finish", command=lambda: self.pages("finish_page"))
                 
                 if threads:
                     thread.join()
@@ -105,15 +107,15 @@ class HSRS(ctk.CTk):
             self.checkbox_1.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_1.place(relx=0.63, rely=0.5, anchor=CENTER)
 
-            self.checkbox_2 = ctk.CTkCheckBox(self, text="Dark Reality", variable=check_var_2, onvalue="on", offvalue="off")
+            self.checkbox_2 = ctk.CTkCheckBox(self, text="Reality", variable=check_var_2, onvalue="on", offvalue="off")
             self.checkbox_2.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_2.place(relx=0.83, rely=0.6, anchor=CENTER)
 
-            self.checkbox_3 = ctk.CTkCheckBox(self, text="Paimon Dark", variable=check_var_3, onvalue="on", offvalue="off")
+            self.checkbox_3 = ctk.CTkCheckBox(self, text="Dark", variable=check_var_3, onvalue="on", offvalue="off")
             self.checkbox_3.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_3.place(relx=0.833, rely=0.5, anchor=CENTER)
 
-            self.checkbox_4 = ctk.CTkCheckBox(self, text="Immersive", variable=check_var_4, onvalue="on", offvalue="off")
+            self.checkbox_4 = ctk.CTkCheckBox(self, text="Mistured", variable=check_var_4, onvalue="on", offvalue="off")
             self.checkbox_4.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_4.place(relx=0.633, rely=0.6, anchor=CENTER)
 
