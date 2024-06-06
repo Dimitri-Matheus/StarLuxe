@@ -7,7 +7,8 @@ The best Reshade installer for this Honkai Star Rail
 </h3>
 
 <p align="center">
-	<img src="https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/be586150-fa5a-447b-b82a-dcd717827fd1"  alt="image"/>
+	<! -- <img src="https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/be586150-fa5a-447b-b82a-dcd717827fd1"  alt="image"/>
+	<img src="https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/7694ee87-5088-4c26-ba14-f5e6434d960a"  alt="image"/>  <! -- Image in enhance 2x -->
 </p>
 
 ## How to use
