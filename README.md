@@ -12,7 +12,7 @@ The best Reshade installer for this Honkai Star Rail
 
 ## How to use
 
-Extract the file and run `HSR+Script.exe` Once open, press **enter** to proceed to the next page. 
+Extract the file and run `HSR+.exe` Once open, press **enter** to proceed to the next page. 
 Enter your game's path and select the desired Reshade pack. 
 
 After completing all the steps, the application will create a file in the ***script/folder***
