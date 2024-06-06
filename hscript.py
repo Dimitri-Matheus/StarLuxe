@@ -47,7 +47,7 @@ class HSRS(ctk.CTk):
         self.frame = Image_Frame(self)
         self.frame.place(relx=0, rely=0, anchor=NW)
 
-        self.title = ctk.CTkLabel(self, text="HSR+Script", font=ctk.CTkFont(size=58, weight="bold"))
+        self.title = ctk.CTkLabel(self, text="HSR+Script", font=ctk.CTkFont(size=58, weight="bold"), text_color="#ffffff")
         self.title.place(relx=0.72, rely=0.4, anchor=CENTER)
 
         self.text_1 = ctk.CTkLabel(self, text="Press enter to continue...", font=ctk.CTkFont(size=20, underline=False))
@@ -163,7 +163,7 @@ class HSRS(ctk.CTk):
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_Brown.ico'))
+        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
 
 if __name__ == "__main__":
     app = HSRS()
