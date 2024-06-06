@@ -1,17 +1,28 @@
 from tkinter import *
 import customtkinter as ctk
 import threading
+import os
+import sys
 import PIL.Image, PIL.ImageTk
 from core import run_command, verification
 from data import download_from_github
 
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, width=300, height=315)
-        self.char_image_1 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 1.png"), size=(256, 256))
-        self.char_image_2 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 2.png"), size=(256, 256))
-        self.char_image_3 = ctk.CTkImage(PIL.Image.open("assets/logo/Trailblazer 3.png"), size=(256, 256))
-        self.char_image_4 = ctk.CTkImage(PIL.Image.open("assets/logo/Pom-Pom.png"), size=(256, 256))
+        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 1.png")), size=(256, 256))
+        self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 2.png")), size=(256, 256))
+        self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 3.png")), size=(256, 256))
+        self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Pom-Pom.png")), size=(256, 256))
         self.char_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
         self.char_label.place(relx=0.5, rely=0.45, anchor=CENTER)
 
@@ -30,7 +41,7 @@ class HSRS(ctk.CTk):
 
         self.enter_bound = False
 
-        ctk.set_default_color_theme("theme/Trailblazer.json")
+        ctk.set_default_color_theme(resource_path("theme\\Trailblazer.json"))
         ctk.set_appearance_mode("dark")
 
         self.frame = Image_Frame(self)
@@ -82,10 +93,10 @@ class HSRS(ctk.CTk):
 
             def check_download(*check_var):
                 config = [
-                    ("script/Presets/Luminescence", "script/Presets"),
-                    ("script/Presets/AstralAura", "script/Presets"),
-                    ("script/Presets/Spectrum", "script/Presets"),
-                    ("script/Presets/Galactic", "script/Presets")
+                    ("script/Presets/Luminescence", resource_path("script\\Presets")),
+                    ("script/Presets/AstralAura", resource_path("script\\Presets")),
+                    ("script/Presets/Spectrum", resource_path("script\\Presets")),
+                    ("script/Presets/Galactic", resource_path("script\\Presets"))
                 ]
                 
                 threads = []
@@ -152,7 +163,7 @@ class HSRS(ctk.CTk):
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap('assets/icon/Oniric_Brown.ico')
+        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_Brown.ico'))
 
 if __name__ == "__main__":
     app = HSRS()

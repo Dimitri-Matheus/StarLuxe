@@ -1,7 +1,17 @@
 import os
+import sys
 import subprocess
 
-injector_path = r"script\Injector.exe"
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+injector_path = resource_path("script\\Injector.exe")
 
 # Function to gui.py
 def verification(impact_path, text):
@@ -16,7 +26,7 @@ def verification(impact_path, text):
         print("Failed to read the files!")
 
 def run_command(impact_path, mode):
-    bat_file_path = os.path.join("script", "HSR+.bat")
+    bat_file_path = os.path.join(resource_path("script\\"), "HSR+.bat")
     bat_content = f"""@echo off
     powershell -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted"
     powershell -Command "Start-Process -FilePath Injector.exe -ArgumentList 'StarRail.exe' -Verb RunAs"
