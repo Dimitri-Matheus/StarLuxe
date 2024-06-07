@@ -62,7 +62,7 @@ thread = threading.Thread(target=download_from_github, args=("YOUR-GITHUB-NAME",
 </p>
 
 ### Support Playnite
-> Open Playnite.exe and add HSR+.exe to the Path tab to open it
+> Open Playnite.exe and add HSR+.bat to the Path tab to open it
 
 ![image](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/1612a5a0-7c4f-4117-9242-f682914ca196)
 
@@ -73,9 +73,16 @@ thread = threading.Thread(target=download_from_github, args=("YOUR-GITHUB-NAME",
 
 ---
 
+> [!IMPORTANT]
+> Your antivirus might block the application from running. 
+> This happens because the build created by PyInstaller can cause a false positive. To learn more, click [HERE](https://nitratine.net/blog/post/issues-when-using-auto-py-to-exe/#my-antivirus-detected-the-exe-as-a-virus)
+> However, the application does not contain any viruses. Therefore, it is recommended to disable your antivirus before running the program.
+
 > [!WARNING]
 > The use of Reshade may result in a ban, although the likelihood is low.
 > Use at your own risk! Sharing your UID may increase the risk of being banned in the game.
+
+
 
 #
 
