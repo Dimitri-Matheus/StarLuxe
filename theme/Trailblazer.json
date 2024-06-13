@@ -169,12 +169,12 @@
       "#4A4D50"
     ],
     "progress_color": [
-      "#3B8ED0",
-      "#1F6AA5"
+      "#FFFFFF",
+      "#FFFFFF"
     ],
     "border_color": [
-      "gray",
-      "gray"
+      "#FFFFFF",
+      "#FFFFFF"
     ]
   },
   "CTkSlider": {

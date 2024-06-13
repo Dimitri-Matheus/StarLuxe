@@ -1,9 +1,8 @@
 from tkinter import *
 import customtkinter as ctk
-import threading
+import PIL.Image, PIL.ImageTk
 import os
 import sys
-import PIL.Image, PIL.ImageTk
 from core import run_command, verification
 from data import download_from_github
 
@@ -15,6 +14,39 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+# Animations
+class FadeInLabel(ctk.CTkLabel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields = ('text_color', 'fg_color')
+        self.colors = {key: self.cget(key) for key in self.fields }
+        self.colors['base'] = self.master.cget('fg_color')
+        self.configure(**{key: self.colors['base'] for key in self.fields})
+        
+        for key, color in self.colors.items():
+            if isinstance(color, str):
+                rgb_color = self.winfo_rgb(color)
+                self.colors[key] = (rgb_color, rgb_color)
+            else:
+                self.colors[key] = self.winfo_rgb(color[0]), self.winfo_rgb(color[1])
+        
+        self.transition = 0
+        self.change_color()
+        
+    def get_curr(self, start, end):
+        rgb_to_hex = lambda rgb : '#{:02x}{:02x}{:02x}'.format(*[int(val * 255 / 65535) for val in rgb])
+        return rgb_to_hex([start[i] + (end[i]-start[i])*self.transition for i in range(3)])
+        
+    def change_color(self):
+        self.configure(
+            **{key:(self.get_curr(self.colors['base'][0], self.colors[key][0]),
+                    self.get_curr(self.colors['base'][1], self.colors[key][1])) for key in self.fields}
+        )
+        self.transition += 0.1
+        if self.transition < 1:
+            self.after(60, self.change_color)
+
 
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
@@ -23,6 +55,7 @@ class Image_Frame(ctk.CTkFrame):
         self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 2.png")), size=(256, 256))
         self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 3.png")), size=(256, 256))
         self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Pom-Pom.png")), size=(256, 256))
+
         self.char_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
         self.char_label.place(relx=0.5, rely=0.45, anchor=CENTER)
 
@@ -41,19 +74,20 @@ class HSRS(ctk.CTk):
 
         self.enter_bound = False
 
+        self.iconbitmap("assets\\icon/Oniric_brown.ico")
         ctk.set_default_color_theme(resource_path("theme\\Trailblazer.json"))
         ctk.set_appearance_mode("dark")
 
         self.frame = Image_Frame(self)
         self.frame.place(relx=0, rely=0, anchor=NW)
 
-        self.title = ctk.CTkLabel(self, text="HSR+Script", font=ctk.CTkFont(size=58, weight="bold"), text_color="#ffffff")
+        self.title = FadeInLabel(self, text="HSR+Script", font=ctk.CTkFont(size=58, weight="bold"), text_color="#ffffff", fg_color="#432818")
         self.title.place(relx=0.72, rely=0.4, anchor=CENTER)
 
-        self.text_1 = ctk.CTkLabel(self, text="Press enter to continue...", font=ctk.CTkFont(size=20, underline=False))
+        self.text_1 = FadeInLabel(self, text="Press enter to continue...", font=ctk.CTkFont(size=20, underline=False), fg_color="#432818")
         self.text_1.place(relx=0.72, rely=0.75, anchor=CENTER)
 
-        self.text_2 = ctk.CTkLabel(self, text="Hello,", font=ctk.CTkFont(size=20))
+        self.text_2 = FadeInLabel(self, text="Hello,", font=ctk.CTkFont(size=20), fg_color="#432818")
         self.text_2.place(relx=0.45, rely=0.05, anchor=NW)
 
     def validate_enter(self, event):
@@ -99,21 +133,13 @@ class HSRS(ctk.CTk):
                     ("script/Presets/Galactic", resource_path("script\\Presets"))
                 ]
                 
-                threads = []
                 for i, c in enumerate(config):
                     if check_var[i].get() == "on":
-                        thread = threading.Thread(target=download_from_github, args=("Dimitri-Matheus", "HSR-Script", c[0], c[1]))
-                        threads.append(thread)
-                        thread.start()
-                    if check_var[i].get() == "off":
-                        self.patch_button.configure(text="Finish", command=lambda: self.pages("finish_page"))
-                
-                if threads:
-                    thread.join()
-                    self.text_1.configure(text="Pack downloaded!")
+                        download_from_github("Dimitri-Matheus", "HSR-Script", c[0], c[1])
+                        self.text_1.configure(text="Pack downloaded!")
                     self.patch_button.configure(text="Next", command=lambda: self.pages("finish_page"))
 
-            
+
             self.checkbox_1 = ctk.CTkCheckBox(self, text="Luminescence", variable=check_var_1, onvalue="on", offvalue="off")
             self.checkbox_1.configure(font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), checkbox_width=20, checkbox_height=20)
             self.checkbox_1.place(relx=0.63, rely=0.5, anchor=CENTER)
@@ -161,9 +187,6 @@ class HSRS(ctk.CTk):
 
             self.patch_button.configure(text="Finish", command=lambda: combined_command())
 
-    def iconbitmap(self, bitmap):
-        self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
 
 if __name__ == "__main__":
     app = HSRS()
