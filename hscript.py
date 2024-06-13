@@ -74,7 +74,6 @@ class HSRS(ctk.CTk):
 
         self.enter_bound = False
 
-        self.iconbitmap("assets\\icon/Oniric_brown.ico")
         ctk.set_default_color_theme(resource_path("theme\\Trailblazer.json"))
         ctk.set_appearance_mode("dark")
 
@@ -186,6 +185,10 @@ class HSRS(ctk.CTk):
             self.radiobutton_2.place(relx=0.73, rely=0.6, anchor=CENTER)
 
             self.patch_button.configure(text="Finish", command=lambda: combined_command())
+
+    def iconbitmap(self, bitmap):
+        self._iconbitmap_method_called = False
+        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
 
 
 if __name__ == "__main__":
