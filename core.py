@@ -27,6 +27,7 @@ def verification(impact_path, text):
 
 def run_command(impact_path, mode):
     bat_file_path = os.path.join(resource_path("script\\"), "HSR+.bat")
+    bat_file_path_playnite = os.path.join(resource_path("script\\"), "HSR+Playnite.bat")
     bat_content = f"""@echo off
     powershell -Command "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted"
     powershell -Command "Start-Process -FilePath Injector.exe -ArgumentList 'StarRail.exe' -Verb RunAs"
@@ -35,12 +36,19 @@ def run_command(impact_path, mode):
     exit
     """
     
+    bat_content_playnite = f"""@echo off
+    powershell -ExecutionPolicy Bypass -Command "Start-Process -FilePath Injector.exe -ArgumentList 'StarRail.exe' -Verb RunAs"
+    powershell -ExecutionPolicy Bypass -Command "Start-Process -FilePath '{impact_path}' -Verb RunAs"
+    exit
+    """
+    
     try:
         #if not os.path.exists(bat_file_path):
-        with open(bat_file_path, "w") as bat_file:
+        with open(bat_file_path, "w") as bat_file, open(bat_file_path_playnite, "w") as bat_file_playnite:
             bat_file.write(bat_content)
+            bat_file_playnite.write(bat_content_playnite)
             subprocess.run(['explorer', os.path.dirname(bat_file_path)])
-            print(f"Batch file created or updated at: {bat_file_path}")
+            print(f"Batch file created or updated at: {bat_file_path} and {bat_file_path_playnite}")
 
     except (OSError, IOError, subprocess.CalledProcessError, Exception) as e:
         print(f"An error occurred: {e}")
