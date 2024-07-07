@@ -62,13 +62,13 @@ thread = threading.Thread(target=download_from_github, args=("YOUR-GITHUB-NAME",
 </p>
 
 ### Support Playnite
-> Open Playnite.exe and add HSR+.bat to the Path tab to open it
+> Open **Playnite** and add HSR+Playnite.bat to the Path tab to open it
 
-![image](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/1612a5a0-7c4f-4117-9242-f682914ca196)
+![image](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/0c2e29cd-91b6-40e7-8c06-f88d9bc2711d)
 
 
 ```
-✦ Commands coming soon...
+✦ Run commands coming soon...
 ```
 
 ---
