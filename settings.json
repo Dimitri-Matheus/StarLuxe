@@ -1,0 +1,27 @@
+{
+    "Launcher": {
+        "game_name": "honkai_star_rail",
+        "game_folder": "D:/Games/Star Rail/Games",
+        "gui_theme": "theme\\Trailblazer.json"
+    },
+    "Packages": {
+        "selected": "",
+        "available": [
+            "Luminescence",
+            "AstralAura",
+            "Spectrum",
+            "Galactic"
+        ],
+        "download_dir": ""
+    },
+    "Account": {
+        "github_name": "",
+        "preset_resource": "",
+        "repository_name": ""
+    },
+    "Script": {
+        "shaders_dir": "script/reshade-shaders",
+        "reshade_file": "script/ReShade.ini",
+        "injector_file": "script/Injector.exe"
+    }
+}

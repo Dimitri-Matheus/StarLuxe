@@ -47,13 +47,13 @@
       "#ffffff"
     ],
     "text_color_disabled": [
-      "#ffffff",
-      "#ffffff"
+      "#999999",
+      "#999999"
     ]
   },
   "CTkLabel": {
     "corner_radius": 0,
-    "fg_color": "transparent",
+    "fg_color": "#432818",
     "text_color": [
       "#ffffff",
       "#ffffff"
@@ -253,14 +253,14 @@
   "CTkScrollbar": {
     "corner_radius": 1000,
     "border_spacing": 4,
-    "fg_color": "transparent",
+    "fg_color": "#432818",
     "button_color": [
-      "gray55",
-      "gray41"
+      "#432818",
+      "#432818"
     ],
     "button_hover_color": [
-      "gray40",
-      "gray53"
+      "#432818",
+      "#432818"
     ]
   },
   "CTkSegmentedButton": {
