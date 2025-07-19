@@ -4,30 +4,46 @@ import os, json
 
 config_file = "settings.json"
 
+#TODO: Modificar o "download_dir": "Presets/" para ele criar a pasta de Presets
+#TODO: Modificar as chaves github_name, preset_resource e repository_name
 default = {
     "Launcher": {
-        "game_name": "honkai_star_rail",
-        "game_folder": "",
         "gui_theme": "theme\\Trailblazer.json"
     },
     "Packages": {
         "selected": "",
         "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic"],
-        "download_dir": ""
+        "download_dir": "Presets/"
     },
     "Account": {
-        "github_name": "",
-        "preset_resource": "",
-        "repository_name": ""
+        "github_name": "Dimitri-Matheus",
+        "preset_resource": "script/",
+        "repository_name": "HSR-Script"
     },
     "Script": {
         "shaders_dir": "script/reshade-shaders",
         "reshade_file": "script/ReShade.ini",
         "injector_file": "script/Injector.exe"
+    },
+    "Games": {
+        "wuthering_waves": {
+            "folder": "",
+            "exe": "Client-Win64-Shipping.exe",
+            "subpath":  "Client/Binaries/Win64"
+        },
+        "genshin_impact": {
+            "folder": "",
+            "exe": "GenshinImpact.exe",
+            "subpath": ""
+        },
+        "honkai_star_rail": {
+            "folder": "",
+            "exe": "StarRail.exe",
+            "subpath": ""
+        }
     }
 }
 
-#TODO: Ajustar para verificar se tem alterações na variáveis e atualizar
 def load_config() -> dict:
     if not os.path.exists(config_file):
         save_config(default)

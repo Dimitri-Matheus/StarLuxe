@@ -6,13 +6,6 @@ from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 
-#* Colocar posteriormente no settings.json
-GAMES = {
-    "wuthering-waves": {"exe": "Client-Win64-Shipping.exe", "subpath": "Client/Binaries/Win64"},
-    "genshin_impact": {"exe": "GenshinImpact.exe", "subpath": ""},
-    "honkai_star_rail": {"exe": "StarRail.exe", "subpath": ""}
-}
-
 def resource_path(relative_path: str) -> Path:
     if getattr(sys, "frozen", False):
         base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
@@ -21,28 +14,26 @@ def resource_path(relative_path: str) -> Path:
 
     return Path(base) / relative_path
 
-
+# TODO: Criar um syslink para Presets e modificar o arquivo Reshade.ini
 class ReshadeSetup():
-    def __init__(self, code: str, base: str, script: dict):
-        self.code = code
+    def __init__(self, code: dict, base: str, script: dict):
         self.base = base
         self.script = script
 
-        self.game_base = Path(base)
+        self.game_base = Path(self.base)
         self.shaders_src = resource_path(script["shaders_dir"])
         self.ini_src = resource_path(script["reshade_file"])
         self.injector = resource_path(script["injector_file"])
 
-        self.game_info = GAMES.get(code)
-        self.game_dir = (self.game_base / self.game_info["subpath"]).resolve() if self.game_info else None
-        self.exe_path = self.game_dir / self.game_info["exe"] if self.game_info else None
+        self.game_info = {
+            "exe": code.get("exe", ""),
+            "subpath": code.get("subpath", "")
+        }
+        self.game_dir = (self.game_base / self.game_info["subpath"]).resolve() if self.game_base else None
+        self.exe_path = self.game_dir / self.game_info["exe"] if self.game_dir else None
 
     def verification(self):
         try:
-            if self.code not in GAMES:
-                logging.error(f"Game not supported! Use one key {list(GAMES)}")
-                raise ValueError("Game not supported!")
-
             if not self.base or not self.game_base.is_dir():
                 logging.error(f"Caminho do jogo não encontrado {self.game_base} ou game_folder é vazio!")
                 raise FileNotFoundError("Game installation folder not found!")
@@ -69,7 +60,7 @@ class ReshadeSetup():
                 "message": str(e)
             }
 
-        logging.info(f"All checks passed for {self.code} at {self.game_base}")
+        logging.info(f"All checks passed for {self.game_info['exe']} at {self.game_base}")
         return True
 
     def inject_game(self):
@@ -111,6 +102,6 @@ class ReshadeSetup():
 
 #! Test functions
 #config = load_config()
-#setup_reshade = ReshadeSetup(config["Launcher"]["game_name"], config["Launcher"]["game_folder"], config["Script"])
+#setup_reshade = ReshadeSetup(config["Games"]["honkai_star_rail"], config["Games"]["honkai_star_rail"]["folder"], config["Script"])
 #setup_reshade.verification()
 #setup_reshade.inject_game()
