@@ -3,10 +3,7 @@
         "gui_theme": "theme/Trailblazer.json"
     },
     "Packages": {
-        "selected": [
-            "Luminescence",
-            "AstralAura"
-        ],
+        "selected": "",
         "available": [
             "Luminescence",
             "AstralAura",
@@ -32,12 +29,12 @@
             "subpath": "Client/Binaries/Win64"
         },
         "genshin_impact": {
-            "folder": "",
+            "folder": "C:/Games/Genshin Impact game",
             "exe": "GenshinImpact.exe",
             "subpath": ""
         },
         "honkai_star_rail": {
-            "folder": "D:/Games/Star Rail/Games",
+            "folder": "",
             "exe": "StarRail.exe",
             "subpath": ""
         }

@@ -200,22 +200,22 @@
     ]
   },
   "CTkOptionMenu": {
-    "corner_radius": 6,
+    "corner_radius": 8,
     "fg_color": [
-      "#3B8ED0",
-      "#1F6AA5"
+      "#434343",
+      "#434343"
     ],
     "button_color": [
-      "#36719F",
-      "#144870"
+      "#434343",
+      "#434343"
     ],
     "button_hover_color": [
-      "#27577D",
-      "#203A4F"
+      "#808080",
+      "#808080"
     ],
     "text_color": [
-      "#DCE4EE",
-      "#DCE4EE"
+      "#FFFFFF",
+      "#FFFFFF"
     ],
     "text_color_disabled": [
       "gray74",
