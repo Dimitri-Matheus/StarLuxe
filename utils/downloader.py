@@ -20,7 +20,7 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
         presets = [p for p in selected_preset if p and p.strip()]
         if not presets:
             logging.error("Nenhum preset selecionado!")
-            raise ValueError("No preset selected!")
+            raise ValueError("Please select at least one preset before downloading!")
 
         if not download_dir:
             download_dir = Path(__file__).parent / resource / "Presets"
@@ -66,8 +66,7 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
 
 
 # Test
-"""
-config = load_config()
+"""config = load_config()
 download_from_github(
     config['Account']['github_name'],
     config['Account']['repository_name'],
@@ -76,5 +75,4 @@ download_from_github(
     config['Packages'].get('download_dir', '')
 )
 """
-
 #download_from_github("Dimitri-Matheus", "Snake", "assets/icon", os.getcwd())
