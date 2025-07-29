@@ -8,12 +8,13 @@ config_file = "settings.json"
 #TODO: Modificar as chaves github_name, preset_resource e repository_name
 default = {
     "Launcher": {
-        "gui_theme": "theme\\Trailblazer.json"
+        "gui_theme": "theme\\Trailblazer.json",
+        "last_played_game": ""
     },
     "Packages": {
         "selected": "",
-        "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic"],
-        "download_dir": "Presets/"
+        "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic", "Legacy"],
+        "download_dir": "script/Presets"
     },
     "Account": {
         "github_name": "Dimitri-Matheus",

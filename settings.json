@@ -1,14 +1,18 @@
 {
     "Launcher": {
-        "gui_theme": "theme/Trailblazer.json"
+        "gui_theme": "theme\\Trailblazer.json",
+        "last_played_game": ""
     },
     "Packages": {
-        "selected": "",
+        "selected": [
+            "Legacy"
+        ],
         "available": [
             "Luminescence",
             "AstralAura",
             "Spectrum",
-            "Galactic"
+            "Galactic",
+            "Legacy"
         ],
         "download_dir": "script/Presets"
     },
@@ -24,12 +28,12 @@
     },
     "Games": {
         "wuthering_waves": {
-            "folder": "",
+            "folder": "C:/Games/Wuthering Waves Game",
             "exe": "Client-Win64-Shipping.exe",
             "subpath": "Client/Binaries/Win64"
         },
         "genshin_impact": {
-            "folder": "C:/Games/Genshin Impact game",
+            "folder": "",
             "exe": "GenshinImpact.exe",
             "subpath": ""
         },
