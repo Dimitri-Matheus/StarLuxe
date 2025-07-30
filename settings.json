@@ -1,11 +1,12 @@
 {
     "Launcher": {
-        "gui_theme": "theme\\Trailblazer.json",
-        "last_played_game": ""
+        "gui_theme": "theme\\Default.json",
+        "last_played_game": "wuthering_waves"
     },
     "Packages": {
         "selected": [
-            "Legacy"
+            "Luminescence",
+            "AstralAura"
         ],
         "available": [
             "Luminescence",

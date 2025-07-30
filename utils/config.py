@@ -8,7 +8,7 @@ config_file = "settings.json"
 #TODO: Modificar as chaves github_name, preset_resource e repository_name
 default = {
     "Launcher": {
-        "gui_theme": "theme\\Trailblazer.json",
+        "gui_theme": "theme\\Default.json",
         "last_played_game": ""
     },
     "Packages": {

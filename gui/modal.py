@@ -30,7 +30,7 @@ class ModalPresets(ctk.CTkToplevel):
             self.selected_presets = selected_option
         
         
-        listbox = CTkListbox(self, font=ctk.CTkFont(family="Verdana", size=15), multiple_selection=True, command=show_value)
+        listbox = CTkListbox(self, font=ctk.CTkFont(family="Verdana", size=15), multiple_selection=True, command=show_value, highlight_color="#515151")
         listbox.pack(fill="both", expand=True, padx=10, pady=20)
 
         for p in self.settings["Packages"]["available"]:
@@ -42,7 +42,7 @@ class ModalPresets(ctk.CTkToplevel):
                 listbox.activate(i)
     
         self.save_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=self.save_preset)
-        self.save_button.configure(width=135, height=44, corner_radius=8)
+        self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
         self.save_button.pack(pady=20)
 
         #! Adicionar um Preview do Preset
@@ -61,7 +61,7 @@ class ModalPresets(ctk.CTkToplevel):
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
+        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
 
 
 # Window #2
@@ -126,11 +126,11 @@ class ModalConfig(ctk.CTkToplevel):
         self.button_frame.grid(row=8, column=0, padx=20, pady=(30, 5), sticky="w")
 
         self.button_4 = ctk.CTkButton(self.button_frame, text="Save Config", font=ctk.CTkFont(size=20), command=lambda: self.save_path(self.path_entries))
-        self.button_4.configure(width=0, height=0, fg_color="transparent")
+        self.button_4.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
         self.button_4.grid(row=0, column=0, sticky="w")
 
         self.button_5 = ctk.CTkButton(self.button_frame, text="Reset Config", font=ctk.CTkFont(size=20), command=lambda: self.reset_config())
-        self.button_5.configure(width=0, height=0, fg_color="transparent")
+        self.button_5.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
         self.button_5.grid(row=0, column=1, padx=15, sticky="w")
 
         self.path_entries = {
@@ -148,7 +148,7 @@ class ModalConfig(ctk.CTkToplevel):
     def select_folder(self, path_widget):
         foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
         if foldername:
-            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_info.title_label.configure(fg_color="gray14")
             path_widget.delete(0, "end")
             path_widget.insert(0, foldername)
@@ -172,7 +172,7 @@ class ModalConfig(ctk.CTkToplevel):
                 errors.append(f"{pretty_name}: {result.get('message','Unknown error')}")
 
         if errors:
-            msbox_error = CTkMessagebox(title="Error", message="\n".join(errors), icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_error = CTkMessagebox(title="Error", message="\n".join(errors), icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
             return
         save_config(self.settings)
@@ -190,7 +190,7 @@ class ModalConfig(ctk.CTkToplevel):
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
+        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
 
 
 # Window #3
@@ -199,7 +199,7 @@ class ModalStarted(ctk.CTkToplevel):
         super().__init__(master)
         self.settings = settings_load
 
-        self.title("Launch Your Game")
+        self.title("Start Your Game")
         self.geometry("700x340")
         self.resizable(width=False, height=False)
 
@@ -226,13 +226,13 @@ class ModalStarted(ctk.CTkToplevel):
         self.button_3.configure(width=128, height=128, corner_radius=8, fg_color="transparent")
         self.button_3.grid(row=1, column=2, sticky="n", padx=10)
 
-        self.text_1 = ctk.CTkLabel(self, text="GI", font=ctk.CTkFont(size=20))
+        self.text_1 = ctk.CTkLabel(self, text="Genshin Impact", font=ctk.CTkFont(size=20))
         self.text_1.grid(row=2, column=0, sticky="n", pady=(10, 0))
 
-        self.text_2 = ctk.CTkLabel(self, text="HSR", font=ctk.CTkFont(size=20))
+        self.text_2 = ctk.CTkLabel(self, text="Honkai Star Rail", font=ctk.CTkFont(size=20))
         self.text_2.grid(row=2, column=1, sticky="n", pady=(10, 0))
 
-        self.text_3 = ctk.CTkLabel(self, text="WuWa", font=ctk.CTkFont(size=20))
+        self.text_3 = ctk.CTkLabel(self, text="Wuthering Waves", font=ctk.CTkFont(size=20))
         self.text_3.grid(row=2, column=2, sticky="n", pady=(10, 0))
 
     def open_game(self, game_code):
@@ -240,7 +240,7 @@ class ModalStarted(ctk.CTkToplevel):
         folder = game_data.get("folder", "").strip()
 
         if not folder:
-            msbox_error = CTkMessagebox(title="Info", message="Please set the game folder first in Settings", icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_error = CTkMessagebox(title="Info", message="Please set the game folder first in Settings", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
             return
 
@@ -251,6 +251,7 @@ class ModalStarted(ctk.CTkToplevel):
         reshade.inject_game()
         self.destroy()
 
+    #! Otimizar o uso do ícone nas janelas
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
+        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
