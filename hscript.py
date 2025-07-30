@@ -49,10 +49,10 @@ class FadeInLabel(ctk.CTkLabel):
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, width=256, height=256)
-        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 1.png")), size=(256, 256))
-        self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 2.png")), size=(256, 256))
-        self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Trailblazer 3.png")), size=(256, 256))
-        self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/Pom-Pom.png")), size=(256, 256))
+        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
 
         self.image_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
         self.image_label.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -94,7 +94,7 @@ class HSRS(ctk.CTk):
             for game_folder in self.settings["Games"].values()
         )
         if initial_page:
-            self.show_page("ReshadePage")
+            self.show_page("HomePage")
         else:
             self.show_page("ConfigPage")
 
@@ -106,7 +106,7 @@ class HSRS(ctk.CTk):
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/Oniric_brown.ico'))
+        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
 
 
 # Default Layout
@@ -119,7 +119,7 @@ class BasePage(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
-        self.title_label = FadeInLabel(self, text="HSR+Script", font=ctk.CTkFont(size=64, weight="bold"))
+        self.title_label = FadeInLabel(self, text="StarLuxe", font=ctk.CTkFont(size=64, weight="bold",))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=20, sticky="N")
 
         self.frame = Image_Frame(self)
@@ -128,7 +128,7 @@ class BasePage(ctk.CTkFrame):
         self.text_1 = FadeInLabel(self, text="", font=ctk.CTkFont(size=26))
         self.text_1.grid(row=2, column=0, columnspan=2, pady=5)
 
-        self.text_2 = FadeInLabel(self, text="Select the path to your game executable\n (e.g., " + r"C:\StarRail\Games\StarRail.exe" + ")", font=ctk.CTkFont(size=20))
+        self.text_2 = FadeInLabel(self, text="Select your game installation folder\n (e.g., " + r"C:\Program Files\MyGame" + ")", font=ctk.CTkFont(size=20))
         self.text_2.grid(row=3, column=0, columnspan=2, pady=20)
 
         self.button_1 = ctk.CTkButton(self, text="", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"))
@@ -156,8 +156,7 @@ class HomePage(BasePage):
         self.button_1.configure(text="Settings", command=lambda: self.open_modal())
         self.button_1.grid_configure(pady=(40, 10))
 
-        #! Ajustar esse botão para exibir uma janela e selecionar o jogo necessário
-        self.button_2.configure(text="Start", command=lambda: self.open_modal_start())
+        self.button_2.configure(text="Start", command=lambda: self.open_modal_start(), fg_color="#1DBD73")
         self.button_2.grid_configure(pady=(40, 10))
 
     def open_modal_start(self):
@@ -166,7 +165,7 @@ class HomePage(BasePage):
         folder = game_data.get("folder", "").strip()
 
         if last_game and folder:
-            msbox_question = CTkMessagebox(title="Quick Launch", message=f"Do you want to start {last_game.replace("_", " ").title()}?", icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Yes", option_2="No")
+            msbox_question = CTkMessagebox(title="Quick Launch", message=f"Do you want to start {last_game.replace("_", " ").title()}?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Yes", option_2="No")
             msbox_question.title_label.configure(fg_color="gray14")
 
             if msbox_question.get() == "Yes":
@@ -200,13 +199,13 @@ class ReshadePage(BasePage):
         self.text_2.grid_configure(pady=(70, 60))
 
         self.preset_button = ctk.CTkButton(self, text="Preset", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.open_modal())
-        self.preset_button.configure(width=284, height=54, corner_radius=8)
+        self.preset_button.configure(width=284, height=54, corner_radius=8, fg_color="#A884F3")
         self.preset_button.grid(row=4, column=0, columnspan=2)
 
         self.button_1.configure(text="Download", command=lambda: self.download_preset(), state="normal")
         self.button_1.grid_configure(pady=(10, 20))
 
-        self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"))
+        self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"), fg_color="#1DBD73")
         self.button_2.grid_configure(pady=(10, 20))
 
     def download_preset(self):
@@ -219,10 +218,10 @@ class ReshadePage(BasePage):
             )
 
         if isinstance(response, dict) and response.get("status") is False:
-            msbox_error = CTkMessagebox(title="Error", message=response["message"], icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_error = CTkMessagebox(title="Error", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
         else:
-            msbox_info = CTkMessagebox(title="Info", message=response["message"], icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_info.title_label.configure(fg_color="gray14")
             self.button_1.configure(text="Downloaded",state="disabled")
 
@@ -263,7 +262,7 @@ class ConfigPage(BasePage):
             save_config(self.settings)
             self.controller.show_page("ReshadePage")
         else:
-            msbox_error = CTkMessagebox(title="Error", message=result["message"], icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_error = CTkMessagebox(title="Error", message=result["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
 
     
@@ -271,7 +270,7 @@ class ConfigPage(BasePage):
     def select_folder(self):
         foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
         if foldername:
-            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon="assets/icon/Oniric_brown.ico", header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_info.title_label.configure(fg_color="gray14")
             self.path_entry.delete(0, "end")
             self.path_entry.insert(0, foldername)
