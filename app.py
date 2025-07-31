@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
-import os, sys, logging
+import os, sys, logging, threading, queue
 from CTkMessagebox import CTkMessagebox
 from utils.downloader import download_from_github
 from utils.config import load_config, save_config
@@ -50,9 +50,9 @@ class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, width=256, height=256)
         self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
-        self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
-        self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
-        self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        #self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        #self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        #self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
 
         self.image_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
         self.image_label.place(relx=0.5, rely=0.5, anchor=CENTER)
@@ -145,7 +145,7 @@ class HomePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         self.modal = None
-        self.frame.update_image(self.frame.char_image_4)
+        #self.frame.update_image(self.frame.char_image_4)
         self.frame.grid(pady=40)
 
         self.text_1.grid_forget()
@@ -191,7 +191,8 @@ class ReshadePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         self.modal = None
-        self.frame.update_image(self.frame.char_image_3)
+        #self.frame.update_image(self.frame.char_image_1)
+        self.download_queue = queue.Queue()
 
         self.text_1.grid_forget()
 
@@ -202,28 +203,44 @@ class ReshadePage(BasePage):
         self.preset_button.configure(width=284, height=54, corner_radius=8, fg_color="#A884F3")
         self.preset_button.grid(row=4, column=0, columnspan=2)
 
-        self.button_1.configure(text="Download", command=lambda: self.download_preset(), state="normal")
+        self.button_1.configure(text="Download", command=lambda: self.download_preset())
         self.button_1.grid_configure(pady=(10, 20))
 
         self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"), fg_color="#1DBD73")
         self.button_2.grid_configure(pady=(10, 20))
 
+    #TODO: Refactorar essa parte com Thread
     def download_preset(self):
-        response = download_from_github(
-                settings["Account"]["github_name"], 
-                settings["Account"]["repository_name"],
-                settings["Account"]["preset_resource"],
-                settings["Packages"]["selected"],
-                settings["Packages"].get("download_dir", "")
-            )
+        self.button_1.configure(text="Downloading...", state="disabled")
 
-        if isinstance(response, dict) and response.get("status") is False:
-            msbox_error = CTkMessagebox(title="Error", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
-        else:
-            msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
-            self.button_1.configure(text="Downloaded",state="disabled")
+        response_args = (
+            settings["Account"]["github_name"], 
+            settings["Account"]["repository_name"],
+            settings["Account"]["preset_folder"],
+            settings["Packages"]["selected"],
+            settings["Packages"].get("download_dir", ""),
+            self.download_queue
+        )
+            
+        threading.Thread(target=download_from_github, args=response_args, daemon=True).start()
+        self.after(100, self.check_download)
+
+    def check_download(self):
+        try:
+            response = self.download_queue.get(block=False)
+            if isinstance(response, dict) and response.get("status") is False:
+                msbox_error = CTkMessagebox(title="Error", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+                msbox_error.title_label.configure(fg_color="gray14")
+
+                self.button_1.configure(text="Download", state="normal")
+            else:
+                msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+                msbox_info.title_label.configure(fg_color="gray14")
+
+                self.button_1.configure(text="Download", state="normal")
+
+        except queue.Empty:
+            self.after(100, self.check_download)
 
 
     def open_modal(self):

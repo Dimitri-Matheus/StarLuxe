@@ -15,7 +15,7 @@ def download_file(url, output_path):
     logging.info(f"Downloaded {url} → {output_path}")
 
 # TODO: Realizar uma verifição se o arquivo existe ou não
-def download_from_github(repo_owner, repo_name, resource, selected_preset, download_dir):
+def download_from_github(repo_owner, repo_name, resource, selected_preset, download_dir, result_queue):
     try:
         presets = [p for p in selected_preset if p and p.strip()]
         if not presets:
@@ -52,17 +52,19 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
             logging.info(f"Preset '{preset_name}' completed at {local}")
 
         logging.info("All selected presets have been downloaded successfully!")
-        return {
+        response =  {
             "status": True,
-            "message": "All selected presets have been downloaded successfully!"
+            "message": "Download completed successfully!"
         }
     
     except Exception as e:
         logging.error(f"Error during download: {e}")
-        return {
+        response =  {
             "status": False,
             "message": str(e)
         }
+    
+    result_queue.put(response)
 
 
 # Test
@@ -70,7 +72,7 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
 download_from_github(
     config['Account']['github_name'],
     config['Account']['repository_name'],
-    config['Account']['preset_resource'],
+    config['Account']['preset_folder'],
     config['Packages']['selected'],
     config['Packages'].get('download_dir', '')
 )

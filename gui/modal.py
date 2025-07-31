@@ -6,7 +6,7 @@ import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 import os, sys, logging
 from CTkListbox import *
-from CTkToolTip import *
+#from CTkToolTip import *
 from CTkMessagebox import CTkMessagebox
 from utils.config import save_config, default
 from utils.paths import resource_path
