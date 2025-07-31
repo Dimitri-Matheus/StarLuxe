@@ -1,13 +1,10 @@
 {
     "Launcher": {
-        "gui_theme": "theme\\Default.json",
-        "last_played_game": "wuthering_waves"
+        "gui_theme": "theme\\default.json",
+        "last_played_game": ""
     },
     "Packages": {
-        "selected": [
-            "Luminescence",
-            "AstralAura"
-        ],
+        "selected": "",
         "available": [
             "Luminescence",
             "AstralAura",
@@ -15,11 +12,11 @@
             "Galactic",
             "Legacy"
         ],
-        "download_dir": "script/Presets"
+        "download_dir": "_internal/script/Presets"
     },
     "Account": {
         "github_name": "Dimitri-Matheus",
-        "preset_resource": "script/",
+        "preset_folder": "script/",
         "repository_name": "HSR-Script"
     },
     "Script": {

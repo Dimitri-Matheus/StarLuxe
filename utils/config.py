@@ -1,24 +1,25 @@
 """Utils for all related to the configuration file"""
 
 import os, json
+import win32security, win32api, ntsecuritycon
 
 config_file = "settings.json"
 
-#TODO: Modificar o "download_dir": "Presets/" para ele criar a pasta de Presets
-#TODO: Modificar as chaves github_name, preset_resource e repository_name
+#* "download_dir": "script/Preset" para testar
+#* "download_dir": "_internal/script/Presets" para build
 default = {
     "Launcher": {
-        "gui_theme": "theme\\Default.json",
+        "gui_theme": "theme\\default.json",
         "last_played_game": ""
     },
     "Packages": {
         "selected": "",
         "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic", "Legacy"],
-        "download_dir": "script/Presets"
+        "download_dir": "_internal/script/Presets"
     },
     "Account": {
         "github_name": "Dimitri-Matheus",
-        "preset_resource": "script/",
+        "preset_folder": "script/",
         "repository_name": "HSR-Script"
     },
     "Script": {
@@ -45,6 +46,25 @@ default = {
     }
 }
 
+def grant_user_access(filepath: str):
+    if not os.path.exists(filepath):
+        return
+
+    try:
+        sd = win32security.GetFileSecurity(filepath, win32security.DACL_SECURITY_INFORMATION)
+        dacl = sd.GetSecurityDescriptorDacl()
+        if dacl is None:
+            dacl = win32security.ACL()
+
+        authenticated_users_sid = win32security.CreateWellKnownSid(win32security.WinAuthenticatedUserSid)
+        dacl.AddAccessAllowedAce(win32security.ACL_REVISION, ntsecuritycon.FILE_ALL_ACCESS, authenticated_users_sid)
+        sd.SetSecurityDescriptorDacl(1, dacl, 0)
+        win32security.SetFileSecurity(filepath, win32security.DACL_SECURITY_INFORMATION, sd)
+
+    except Exception as e:
+        print(f"Falha ao definir permissões para o arquivo {filepath}: {e}")
+
+
 def load_config() -> dict:
     if not os.path.exists(config_file):
         save_config(default)
@@ -56,9 +76,11 @@ def load_config() -> dict:
         save_config(default)
         return default.copy()
 
+
 def save_config(config: dict):
     with open(config_file, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=4, ensure_ascii=False)
+    grant_user_access(config_file)
 
 
 #! Test functions
