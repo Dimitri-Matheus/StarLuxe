@@ -1,8 +1,8 @@
-<h1 align="center">HSR+Script</h1>
+<h1 align="center">StarLuxe</h1>
 
 <h3 align="center">
 	<img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="30px" width="0px"/>
-The best Reshade installer for this Honkai Star Rail
+The best ReShade Launcher
 	<img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="30px" width="0px"/>
 </h3>
 
@@ -11,22 +11,21 @@ The best Reshade installer for this Honkai Star Rail
 </p>
 
 ## How to use
+Download the [latest version](https://github.com/Dimitri-Matheus/HSR-Script/releases) and extract the file. Then, run `StarLuxe.exe`
 
-Extract the file and run `HSR+.exe` Once open, press **enter** to proceed to the next page. 
-Enter your game's path and select the desired Reshade pack. 
-
-After completing all the steps, the application will create a file in the ***script/folder***
+Once open, fill in the necessary information and download the ReShade presets if you wish to use them. 
+On the main screen, press the **Start** button
 <p align="center">
-	<b>✧ Run HSR+.bat and enjoy ✧</b>
+	<b>✧ Select the game you want to use ReShade and enjoy ✧</b>
 </p>
 
 
 ---
 
 ## Attributes
-1. Facilitating Reshade integration into _Honkai Star Rail_
-2. Support for custom themes and Reshade presets
-3. Custom script creation
+- **Launcher** — Allows applying ReShade to selected games
+- **Custom Themes & Preset Packs** — Provides support for custom themes and predefined Reshade preset packs
+- **GitHub Integration** — Enables downloading your own Reshade presets directly from GitHub.
 
 ---
 
@@ -35,68 +34,68 @@ After completing all the steps, the application will create a file in the ***scr
 - Clone this [repository](https://github.com/Dimitri-Matheus/HSR-Script.git)
    - Install the required libraries with the following command
 
-![terminal](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/a7bec06c-6823-4183-978d-58cc3b2d119a)
-
+<img width="1460" height="614" alt="terminal" src="https://github.com/user-attachments/assets/edf80a22-b281-43f0-a8ca-38ff2bad2ac9" />
 
 <details>
-<summary>How to add your Reshade pack?</summary>
+<summary><strong>How to create Custom Themes?</strong></summary>
    
-   - Open the file `data.py`
-      - Change the properties of the list to indicate the folder:
+1. Download [CTkThemeMaker](https://github.com/Akascape/CTkThemeMaker?tab=readme-ov-file)
+2. Navigate to the `theme/` directory, copy `default.json` and rename the copy (e.g. `custom_theme.json`)  
+3. Launch **CTkThemeMaker**, load `custom_theme.json` and edit each section according to your preference  
+   - Once your theme is saved, open the `settings.json` file and update the **Launcher** section to point to your new theme:
 
-<p>
-
-```python
-config = [
-    ("assets/icon", "Presets"),
-    ("assets/fonts", "Presets"),
-    ("assets/sound", "Presets"),
-    ("css", "Presets")
-]
-
-thread = threading.Thread(target=download_from_github, args=("YOUR-GITHUB-NAME", "REPOSITORY", c[0], c[1]))
-
-```
-
+     ```json
+     "Launcher": {
+       "gui_theme": "theme\\custom_theme.json",
+       "last_played_game": ""
+     }
+     ```
+4. Check the [documentation](https://customtkinter.tomschimansky.com/documentation/color/) to learn more!
 </details>
-</p>
 
-### Support Playnite
-> Open **Playnite** and add HSR+Playnite.bat to the Path tab to open it
+<details>
+<summary><strong>How to add your ReShade Pack?</strong></summary>
 
-![image](https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/0c2e29cd-91b6-40e7-8c06-f88d9bc2711d)
+1. Create a GitHub repo and add a `Presets/` folder with your .ini files
+   - In the `settings.json` file, set the preset_folder value to match the name of that folder:
 
-
-```
-✦ Run commands coming soon...
-```
+    ```json
+    "Account": {
+      "github_name": "your-username",
+      "preset_folder": "Presets/",
+      "repository_name": "your-repo"
+     }
+     ```
+2. Restart `StarLuxe.exe` and download your preset from the Settings section
+</details>
 
 ---
 
 > [!IMPORTANT]
 > Your antivirus might block the application from running. 
 > This happens because the build created by PyInstaller can cause a false positive. To learn more, click [HERE](https://nitratine.net/blog/post/issues-when-using-auto-py-to-exe/#my-antivirus-detected-the-exe-as-a-virus)
-> However, the application does not contain any viruses. Therefore, it is recommended to disable your antivirus before running the program.
+> The application is safe and contains no viruses. To prevent interference, it is recommended to add the program to your antivirus exclusion or whitelist before running it, rather than disabling your antivirus entirely.
 
 > [!WARNING]
 > The use of Reshade may result in a ban, although the likelihood is low.
 > Use at your own risk! Sharing your UID may increase the risk of being banned in the game.
 
 
-
 #
 
-## Contributing
+## Support this Project ☕
 
-If you want to contribute to this project, open a new issue to discuss your idea or submit a pull request with the proposed changes
+Did this project help you? Support me by buying a coffee!
+
+[![Buy Me a Coffee]()
+
+**✦ Thanks for your support! ✦**
 
 ## Credits
 <p>
 	<b>ReShade</b> developer for developing ReShade
 	<br>
 	<b>SweetFX</b> developer for creating SweetFX shaders collection/set/pack
-	<br>
-	<b>shirooo39</b> developer for commands
 	<br>
 </p>
 
