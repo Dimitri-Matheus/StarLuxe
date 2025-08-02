@@ -5,8 +5,6 @@ import win32security, win32api, ntsecuritycon
 
 config_file = "settings.json"
 
-#* "download_dir": "script/Preset" para testar
-#* "download_dir": "_internal/script/Presets" para build
 default = {
     "Launcher": {
         "gui_theme": "theme\\default.json",
@@ -15,7 +13,7 @@ default = {
     "Packages": {
         "selected": "",
         "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic", "Legacy"],
-        "download_dir": "_internal/script/Presets"
+        "download_dir": "script/Presets"
     },
     "Account": {
         "github_name": "Dimitri-Matheus",

@@ -12,7 +12,7 @@
             "Galactic",
             "Legacy"
         ],
-        "download_dir": "_internal/script/Presets"
+        "download_dir": "script/Presets"
     },
     "Account": {
         "github_name": "Dimitri-Matheus",
@@ -26,7 +26,7 @@
     },
     "Games": {
         "wuthering_waves": {
-            "folder": "C:/Games/Wuthering Waves Game",
+            "folder": "",
             "exe": "Client-Win64-Shipping.exe",
             "subpath": "Client/Binaries/Win64"
         },

@@ -119,7 +119,7 @@ class BasePage(ctk.CTkFrame):
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
 
-        self.title_label = FadeInLabel(self, text="StarLuxe", font=ctk.CTkFont(size=64, weight="bold",))
+        self.title_label = FadeInLabel(self, text="StarLuxe", font=ctk.CTkFont(size=64, weight="bold"))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=20, sticky="N")
 
         self.frame = Image_Frame(self)
@@ -145,8 +145,14 @@ class HomePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         self.modal = None
+        self.previous_page = "ReshadePage"
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/back_icon.png")), size=(32, 32))
         #self.frame.update_image(self.frame.char_image_4)
         self.frame.grid(pady=40)
+
+        self.back_button = ctk.CTkButton(self, text="", image=self.button_icon, command=self.on_back)
+        self.back_button.configure(width=0, height=0, fg_color="transparent")
+        self.back_button.grid(row=0, column=0, sticky="nw", padx=10, pady=10)
 
         self.text_1.grid_forget()
         
@@ -179,12 +185,18 @@ class HomePage(BasePage):
         else:
             self.modal.focus()
 
+
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = ModalConfig(self, self.settings)
             self.modal.focus()
         else:
             self.modal.focus()
+
+
+    def on_back(self):
+        self.controller.show_page(self.previous_page)
+
 
 # Second Page
 class ReshadePage(BasePage):
@@ -209,7 +221,6 @@ class ReshadePage(BasePage):
         self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"), fg_color="#1DBD73")
         self.button_2.grid_configure(pady=(10, 20))
 
-    #TODO: Refactorar essa parte com Thread
     def download_preset(self):
         self.button_1.configure(text="Downloading...", state="disabled")
 
@@ -224,6 +235,7 @@ class ReshadePage(BasePage):
             
         threading.Thread(target=download_from_github, args=response_args, daemon=True).start()
         self.after(100, self.check_download)
+
 
     def check_download(self):
         try:
@@ -255,7 +267,7 @@ class ReshadePage(BasePage):
 class ConfigPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-        self.frame.update_image(self.frame.char_image_1)
+        #self.frame.update_image(self.frame.char_image_1)
 
         self.text_1.configure(text="Welcome, Trailblazer!")
 
