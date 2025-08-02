@@ -14,6 +14,7 @@ from utils.injector import ReshadeSetup
 
 logging.basicConfig(level=logging.INFO)
 
+#TODO: Otimizar o uso do ícone nas janelas
 class ModalPresets(ctk.CTkToplevel):
     def __init__(self, master, settings_load: dict):
         super().__init__(master)
@@ -45,7 +46,7 @@ class ModalPresets(ctk.CTkToplevel):
         self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
         self.save_button.pack(pady=20)
 
-        #! Adicionar um Preview do Preset
+        #TODO: Adicionar um Preview do Preset
         #self.game_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\image_1.png")), size=(128, 71))
         #CTkToolTip(listbox, message="", image=self.game_1, corner_radius=8, bg_color="#000001", fg_color="transparent", padding=(1.5, 1.5), alpha=0.95)
 
@@ -251,7 +252,7 @@ class ModalStarted(ctk.CTkToplevel):
         reshade.inject_game()
         self.destroy()
 
-    #! Otimizar o uso do ícone nas janelas
+    
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
         super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))

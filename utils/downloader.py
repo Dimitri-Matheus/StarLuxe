@@ -2,6 +2,7 @@
 
 import os, requests, logging
 from pathlib import Path
+from utils.paths import resource_path
 #from config import load_config
 
 logging.basicConfig(level=logging.INFO)
@@ -23,9 +24,9 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
             raise ValueError("Please select at least one preset before downloading!")
 
         if not download_dir:
-            download_dir = Path(__file__).parent / resource / "Presets"
-        download_dir = Path(download_dir)
-
+            download_dir = resource_path(Path(__file__).parent / resource / "Presets")
+        
+        download_dir = Path(resource_path(download_dir))
         resource = resource.rstrip("/\\")
 
         for preset_name in selected_preset:
