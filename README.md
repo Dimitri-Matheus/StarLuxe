@@ -1,14 +1,9 @@
-<h1 align="center">StarLuxe</h1>
-
-<h3 align="center">
-	<img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="30px" width="0px"/>
-The best ReShade Launcher
-	<img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="30px" width="0px"/>
-</h3>
+<h1 align="center">StarLuxe Launcher</h1>
 
 <p align="center">
-	<img src="https://github.com/Dimitri-Matheus/HSR-Script/assets/121637762/be586150-fa5a-447b-b82a-dcd717827fd1"  alt="image"/>
+	<img width="1024" height="1024" src="https://github.com/user-attachments/assets/1a7ee5a5-b672-4b08-b90d-ce36272a675c"  alt="image"/>
 </p>
+
 
 ## How to use
 Download the [latest version](https://github.com/Dimitri-Matheus/HSR-Script/releases) and extract the file. Then, run `StarLuxe.exe`
@@ -18,7 +13,6 @@ On the main screen, press the **Start** button
 <p align="center">
 	<b>✧ Select the game you want to use ReShade and enjoy ✧</b>
 </p>
-
 
 ---
 
@@ -57,7 +51,8 @@ On the main screen, press the **Start** button
 <summary><strong>How to add your ReShade Pack?</strong></summary>
 
 1. Create a GitHub repo and add a `Presets/` folder with your .ini files
-   - In the `settings.json` file, set the preset_folder value to match the name of that folder:
+   - In the `settings.json` file, set the `preset_folder` value to match the folder name you configured in your GitHub repository.
+ 	Don’t forget to set your **GitHub username** and **repository name** as well:
 
     ```json
     "Account": {
@@ -66,7 +61,16 @@ On the main screen, press the **Start** button
       "repository_name": "your-repo"
      }
      ```
-2. Restart `StarLuxe.exe` and download your preset from the Settings section
+   - Also, define the names of the preset packages you added:
+    ```json
+    "Packages": {
+        "available": [
+            "Name_preset_1",
+            "Name_preset_2"
+	],
+     }
+     ```
+2. Restart `StarLuxe.exe` and download your preset from the Preset section
 </details>
 
 ---
