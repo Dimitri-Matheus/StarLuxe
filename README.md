@@ -89,9 +89,9 @@ On the main screen, press the **Start** button
 
 ## Support this Project ☕
 
-Did this project help you? Support me by buying a coffee!
+Did this project help you?
 
-[![Buy Me a Coffee]()
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/dimitrimath)
 
 **✦ Thanks for your support! ✦**
 
