@@ -8,7 +8,8 @@ config_file = "settings.json"
 default = {
     "Launcher": {
         "gui_theme": "theme\\default.json",
-        "last_played_game": ""
+        "last_played_game": "",
+        "xxmi_feature_enabled": False
     },
     "Packages": {
         "selected": "",
@@ -23,7 +24,9 @@ default = {
     "Script": {
         "shaders_dir": "script/reshade-shaders",
         "reshade_file": "script/ReShade.ini",
-        "injector_file": "script/Injector.exe"
+        "injector_file": "script/Injector.exe",
+        "reshade_dll": "script/ReShade64.dll",
+        "xxmi_file": ""
     },
     "Games": {
         "wuthering_waves": {
