@@ -1,6 +1,6 @@
 """Utils for all related to Reshade injection logic"""
 
-import os, sys, shutil, subprocess, logging
+import os, sys, shutil, subprocess, logging, json
 from pathlib import Path
 #from config import load_config
 
@@ -16,18 +16,22 @@ def resource_path(relative_path: str) -> Path:
 
 
 class ReshadeSetup():
-    def __init__(self, code: dict, base: str, script: dict, package: dict):
+    def __init__(self, code: dict, base: str, script: dict, package: dict, xxmi_enabled: bool):
         self.code = code
         self.base = base
         self.script = script
         self.package = package
+        self.xxmi_enabled = xxmi_enabled
 
         self.game_base = Path(self.base)
         self.shaders_src = resource_path(script["shaders_dir"])
         self.ini_src = resource_path(script["reshade_file"])
         self.injector = resource_path(script["injector_file"])
+        self.xxmi_src = resource_path(script["xxmi_file"])
+        self.reshade_dll = resource_path(script["reshade_dll"])
         self.download_src = resource_path(package["download_dir"])
 
+    #TODO: Refatorar essa parte
     def verification(self):
         try:
             if not self.base or not self.game_base.is_dir():
@@ -57,6 +61,11 @@ class ReshadeSetup():
             if not self.script.get("injector_file", "") or not self.injector.is_file():
                 logging.error(f"Injector.exe não encontrado {self.injector} ou injector_file é vazio!")
                 raise FileNotFoundError("Injector executable not found!")
+
+            if self.xxmi_enabled:
+                if not self.script.get("xxmi_file", "") or not self.xxmi_src.is_file() or self.xxmi_src.name != "XXMI Launcher Config.json":
+                    logging.error(f"XXMI Settings não encontrado {self.xxmi_src} ou xxmi_file é vazio!")
+                    raise FileNotFoundError("XXMI Settings.json not found!")
             
         except Exception as e:
             return {
@@ -121,9 +130,47 @@ class ReshadeSetup():
         ]
         subprocess.run(cmd_play, shell=False)
 
+    
+    def xxmi_integration(self, game_code):
+        if not self.xxmi_enabled:
+            logging.warning(f"Standard mode (XXMI inactive)")
+            return
+
+        IMPORTER_MAP = {
+            "genshin_impact": "GIMI",
+            "honkai_star_rail": "SRMI",
+            "wuthering_waves": "WWMI"
+        }
+
+        importer_key = IMPORTER_MAP.get(game_code)
+        if not importer_key:
+            logging.warning(f"O jogo {game_code} não possui um importador XXMI mapeado!")
+            return None
+
+        logging.info(f"Mapeamento para {game_code} encontrado com sucesso!")
+
+        try:
+            with open(self.xxmi_src, "r+", encoding="utf-8") as f:
+                config_data = json.load(f)
+
+                importer_settings = config_data["Importers"][importer_key]["Importer"]
+                importer_settings["extra_libraries_enabled"] = True
+                importer_settings["extra_libraries"] = str(self.reshade_dll)
+
+                f.seek(0)
+                json.dump(config_data, f, indent=4)
+                f.truncate()
+            
+            logging.info("Arquivo de config do XXMI atualizado com sucesso!")
+
+        except Exception as e:
+            logging.error(e)
+
+
 
 #! Test functions
 #config = load_config()
-#setup_reshade = ReshadeSetup(config["Games"]["honkai_star_rail"], config["Games"]["honkai_star_rail"]["folder"], config["Script"], settings["Packages"])
+#setup_reshade = ReshadeSetup(config["Games"]["honkai_star_rail"], config["Games"]["honkai_star_rail"]["folder"], config["Script"], config["Packages"], config["Launcher"]["xxmi_feature_enabled"])
 #setup_reshade.verification()
-#setup_reshade.inject_game()
+#setup_reshade.inject_game(game_code)
+#setup_reshade.xxmi_integration()

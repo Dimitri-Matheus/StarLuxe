@@ -175,7 +175,7 @@ class HomePage(BasePage):
             msbox_question.title_label.configure(fg_color="gray14")
 
             if msbox_question.get() == "Yes":
-                reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"])
+                reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
                 reshade.inject_game()
                 return
         
@@ -282,7 +282,7 @@ class ConfigPage(BasePage):
     # Check and saves the path in settings.json
     def save_path(self):
         game_path = self.path_entry.get()
-        setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], settings["Packages"])
+        setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
         result = setup_reshade.verification()
 
         if result["status"] == True:
@@ -299,8 +299,6 @@ class ConfigPage(BasePage):
     def select_folder(self):
         foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
         if foldername:
-            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
             self.path_entry.delete(0, "end")
             self.path_entry.insert(0, foldername)
 

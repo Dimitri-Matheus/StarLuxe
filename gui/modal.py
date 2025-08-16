@@ -72,89 +72,110 @@ class ModalConfig(ctk.CTkToplevel):
         self.settings = settings_load
 
         self.title("Settings")
-        self.geometry("700x530")
+        self.geometry("700x550")
         self.resizable(width=False, height=False)
 
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=1)
 
-        # Path Entry #1
-        self.text_1 = ctk.CTkLabel(self, text="Path Game - Genshin Impact", font=ctk.CTkFont(size=20))
-        self.text_1.grid(row=0, column=0, padx=20, pady=(15, 5), sticky="w")
+        self.scrollable_frame = ctk.CTkScrollableFrame(self)
+        self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
+        self.scrollable_frame.grid_columnconfigure(1, weight=0)
 
-        self.path_entry_1 = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14), )
-        self.path_entry_1.configure(width=478, height=48, corner_radius=8)
-        self.path_entry_1.grid(row=1, column=0, padx=20, pady=(5, 5), sticky="w")
+        game_configs = [
+            ("genshin_impact",   "Genshin Impact"),
+            ("honkai_star_rail", "Honkai Star Rail"),
+            ("wuthering_waves",  "Wuthering Waves")
+        ]
 
-        self.button_1 = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_folder(self.path_entry_1))
-        self.button_1.configure(width=135, height=48, corner_radius=8)
-        self.button_1.grid(row=1, column=1, padx=0, pady=(5, 5), sticky="w")
+        self.path_entries = {}
+        self.xxmi_file_path = ""
+        r = 0
 
-        # Path Entry #2
-        self.text_2 = ctk.CTkLabel(self, text="Path Game - Honkai Star Rail", font=ctk.CTkFont(size=20))
-        self.text_2.grid(row=2, column=0, padx=20, pady=(15, 5), sticky="w")
+        # Title #1
+        self.title_1 = ctk.CTkLabel(self.scrollable_frame, text="Game Settings", font=ctk.CTkFont(size=24, weight="bold"))
+        self.title_1.grid(row=r, column=0, columnspan=2, sticky="w", padx=20, pady=(10, 5)); r += 1
 
-        self.path_entry_2 = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry_2.configure(width=478, height=48, corner_radius=8)
-        self.path_entry_2.grid(row=3, column=0, padx=20, pady=(5, 5), sticky="w")
+        for game_id, game_name in game_configs:
+            self.text_1 = ctk.CTkLabel(self.scrollable_frame, text=f"Path Game - {game_name}", font=ctk.CTkFont(size=18))
+            self.text_1.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+            
+            self.path_entry = ctk.CTkEntry(self.scrollable_frame, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14), )
+            self.path_entry.configure(width=478, height=38, corner_radius=8)
+            self.path_entry.grid(row=r, column=0, padx=25, pady=5, sticky="w")
 
-        self.button_2 = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_folder(self.path_entry_2))
-        self.button_2.configure(width=135, height=48, corner_radius=8)
-        self.button_2.grid(row=3, column=1, padx=0, pady=(5, 5), sticky="w")
+            folder_path = self.settings["Games"][game_id].get("folder", "")
+            if folder_path:
+                self.path_entry.insert(0, folder_path)
 
-        # Path Entry #3
-        self.text_3 = ctk.CTkLabel(self, text="Path Game - Wuthering Waves", font=ctk.CTkFont(size=20))
-        self.text_3.grid(row=4, column=0, padx=20, pady=(15, 5), sticky="w")
+            self.button = ctk.CTkButton(self.scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda entry=self.path_entry: self.select_folder(entry))
+            self.button.configure(width=123, height=38, corner_radius=8)
+            self.button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="w"); r += 1
 
-        self.path_entry_3 = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry_3.configure(width=478, height=48, corner_radius=8)
-        self.path_entry_3.grid(row=5, column=0, padx=20, pady=(5, 5), sticky="w")
+            self.path_entries[game_id] = self.path_entry
 
-        self.button_3 = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_folder(self.path_entry_3))
-        self.button_3.configure(width=135, height=48, corner_radius=8)
-        self.button_3.grid(row=5, column=1, padx=0, pady=(5, 5), sticky="w")
+        # Title #2
+        self.title_2 = ctk.CTkLabel(self.scrollable_frame, text="App Settings", font=ctk.CTkFont(size=24, weight="bold"))
+        self.title_2.grid(row=r, column=0, columnspan=2, sticky="w", padx=20, pady=(10, 5)); r += 1
 
         # Themes
-        self.text_4 = ctk.CTkLabel(self, text="Themes", font=ctk.CTkFont(size=20))
-        self.text_4.grid(row=6, column=0, padx=20, pady=(15, 5), sticky="w")
+        self.text_2 = ctk.CTkLabel(self.scrollable_frame, text="Theme", font=ctk.CTkFont(size=18))
+        self.text_2.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
-        self.themes_option = ctk.CTkOptionMenu(self, values=["Default"], font=ctk.CTkFont(family="Verdana", size=14), state="disabled")
-        self.themes_option.configure(width=216, height=44)
-        self.themes_option.grid(row=7, column=0, padx=20, pady=(5,5), sticky="w")
+        self.themes_option = ctk.CTkOptionMenu(self.scrollable_frame, values=["..."], font=ctk.CTkFont(family="Verdana", size=14), state="disabled")
+        self.themes_option.configure(width=180, height=36)
+        self.themes_option.grid(row=r, column=0, padx=25, pady=5, sticky="w"); r += 1
+
+        self.text_3 = ctk.CTkLabel(self.scrollable_frame, text="Integration", font=ctk.CTkFont(size=18))
+        self.text_3.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+
+        self.switch_var = ctk.BooleanVar(value=self.settings["Launcher"]["xxmi_feature_enabled"])
+        self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
+        
+        self.switch = ctk.CTkSwitch(self.scrollable_frame, text="XXMI", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False, command=lambda: self.switch_toogle())
+        self.switch.configure(switch_width=36, switch_height=20, variable=self.switch_var)
+        self.switch.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
+
+        self.browser_button = ctk.CTkButton(self.scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=11, weight="bold"), command=lambda: self.select_file())
+        self.browser_button.configure(width=78, height=28, corner_radius=8)
+        self.browser_button.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
+        if not self.switch_var.get():
+            self.browser_button.grid_remove()
 
         # Settings Manager
         self.button_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.button_frame.grid(row=8, column=0, padx=20, pady=(30, 5), sticky="w")
+        self.button_frame.grid(row=r, column=0, padx=20, pady=(10, 18), sticky="ew")
 
-        self.button_4 = ctk.CTkButton(self.button_frame, text="Save Config", font=ctk.CTkFont(size=20), command=lambda: self.save_path(self.path_entries))
+        self.button_4 = ctk.CTkButton(self.button_frame, text="Save Config", font=ctk.CTkFont(size=18), command=lambda: self.save_path(self.path_entries))
         self.button_4.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
         self.button_4.grid(row=0, column=0, sticky="w")
 
-        self.button_5 = ctk.CTkButton(self.button_frame, text="Reset Config", font=ctk.CTkFont(size=20), command=lambda: self.reset_config())
+        self.button_5 = ctk.CTkButton(self.button_frame, text="Reset Config", font=ctk.CTkFont(size=18), command=lambda: self.reset_config())
         self.button_5.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
         self.button_5.grid(row=0, column=1, padx=15, sticky="w")
 
-        self.path_entries = {
-            "genshin_impact":self.path_entry_1,
-            "honkai_star_rail":self.path_entry_2,
-            "wuthering_waves":self.path_entry_3,
-        }
+    def switch_toogle(self):
+        if self.switch_var.get():
+            self.browser_button.grid()
+        else:
+            self.browser_button.grid_remove()
 
-        for code, entry in self.path_entries.items():
-            entry.delete(0, "end")
-            folder = self.settings["Games"][code]["folder"]
-            if folder:
-                entry.insert(0, folder)
-
-    def select_folder(self, path_widget):
+    def select_folder(self, widget):
         foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
         if foldername:
-            msbox_info = CTkMessagebox(title="Selected Folder", message=f"{foldername}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            widget.delete(0, "end")
+            widget.insert(0, foldername)
+
+    def select_file(self):
+        filename = filedialog.askopenfilename(title="Open XXMI Settings", initialdir="/", defaultextension=".json", filetypes=[("JSON files","*.json"), ("All files", "*.*")])
+        if filename:
+            self.xxmi_file_path = filename
+            msbox_info = CTkMessagebox(title="Selected File", message=f"{filename}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_info.title_label.configure(fg_color="gray14")
-            path_widget.delete(0, "end")
-            path_widget.insert(0, foldername)
 
-
+    #TODO: Refatorar essa parte
     def save_path(self, path_entries: dict[str, ctk.CTkEntry]):
         errors = []
         
@@ -163,19 +184,28 @@ class ModalConfig(ctk.CTkToplevel):
             if not game_path:
                 continue
 
-            setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], self.settings["Packages"])
+            self.settings["Script"]["xxmi_file"] = self.xxmi_file_path
+            setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], self.settings["Packages"], self.switch_var.get())
             result = setup_reshade.verification()
+            
             if result["status"] == True:
                 game_code = result["game_code"]
                 self.settings["Games"][game_code]["folder"] = game_path
+                self.settings["Launcher"]["xxmi_feature_enabled"] = self.switch_var.get()
             else:
-                pretty_name = game_code.replace("_", " ").title()
-                errors.append(f"{pretty_name}: {result.get('message','Unknown error')}")
+                message = result.get("message", "Unknown error")
+                if "XXMI" in message:
+                    if message not in errors:
+                        errors.append(message)
+                else:
+                    pretty_name = game_code.replace("_", " ").title()
+                    errors.append(f"{pretty_name}: {message}")
 
         if errors:
             msbox_error = CTkMessagebox(title="Error", message="\n".join(errors), icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
             return
+        
         save_config(self.settings)
         self.destroy()
 
@@ -248,7 +278,8 @@ class ModalStarted(ctk.CTkToplevel):
         self.settings["Launcher"]["last_played_game"] = game_code
         save_config(self.settings)
 
-        reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"])
+        reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
+        reshade.xxmi_integration(game_code)
         reshade.inject_game()
         self.destroy()
 
