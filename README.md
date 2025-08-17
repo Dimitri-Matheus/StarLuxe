@@ -17,9 +17,9 @@ On the main screen, press the **Start** button
 ---
 
 ## Attributes
-- **Launcher** — Allows applying ReShade to selected games
-- **Custom Themes & Preset Packs** — Provides support for custom themes and predefined Reshade preset packs
-- **GitHub Integration** — Enables downloading your own Reshade presets directly from GitHub.
+- **Launcher:** Allows applying ReShade to selected games
+- **Custom Themes & Preset Packs:** Provides support for custom themes and predefined Reshade preset packs
+- **GitHub Integration:** Enables downloading your own Reshade presets directly from GitHub.
 
 ---
 
