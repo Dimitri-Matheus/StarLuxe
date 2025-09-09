@@ -16,82 +16,96 @@ def resource_path(relative_path: str) -> Path:
 
 
 class ReshadeSetup():
-    def __init__(self, code: dict, base: str, script: dict, package: dict, xxmi_enabled: bool):
-        self.code = code
-        self.base = base
-        self.script = script
-        self.package = package
+    def __init__(self, settings: dict, game_path: str, xxmi_enabled: bool):
+        self.settings = settings
+        self.game_base = game_path
+        self.game_path = Path(self.game_base)
+
+        self.game_config = self.settings.get("Games", {})
+        self.script_config = self.settings.get("Script", {})
+        self.package_config = self.settings.get("Packages", {})
         self.xxmi_enabled = xxmi_enabled
 
-        self.game_base = Path(self.base)
-        self.shaders_src = resource_path(script["shaders_dir"])
-        self.ini_src = resource_path(script["reshade_file"])
-        self.injector = resource_path(script["injector_file"])
-        self.xxmi_src = resource_path(script["xxmi_file"])
-        self.reshade_dll = resource_path(script["reshade_dll"])
-        self.download_src = resource_path(package["download_dir"])
+        self.reshade_src = resource_path(self.script_config.get("reshade_file"))
+        self.injector_src = resource_path(self.script_config.get("injector_file"))
+        self.shaders_src = resource_path(self.script_config.get("shaders_dir"))
+        self.reshade_dll = resource_path(self.script_config.get("reshade_dll"))
+        self.xxmi_src = resource_path(self.script_config.get("xxmi_file"))
+        self.download_src = resource_path(self.package_config.get("download_dir"))
 
-    #TODO: Refatorar essa parte
-    def verification(self):
+    def verify_installation(self):
         try:
-            if not self.base or not self.game_base.is_dir():
-                logging.error(f"Caminho do jogo não encontrado {self.game_base} ou game_folder é vazio!")
-                raise FileNotFoundError("Game installation folder not found!")
-            
-            for code_games, cfg in self.code.items():
-                exe_path = (self.game_base / cfg["subpath"] / cfg["exe"]).resolve()
+            if not self.game_base or not self.game_path.is_dir():
+                logging.error(f"Caminho vazio ou não encontrado: {self.game_path}")
+                raise FileNotFoundError("Game installation not found!")
+
+            for code, config in self.game_config.items():
+                exe_path = (self.game_path / config["subpath"] / config["exe"]).resolve()
                 if exe_path.is_file():
-                    self.selected_code = code_games
-                    self.game_info = cfg
+                    self.game_code = code
+                    self.game_info = config
                     self.game_dir = exe_path.parent
                     self.exe_path = exe_path
                     break
             else:
-                logging.error("Executável do jogo não encontrado em nenhuma configuração!")
+                logging.error("Nenhum executável válido encontrado nas configurações")
                 raise FileNotFoundError("Game executable not found!")
 
-            if not self.script.get("shaders_dir", "") or not self.shaders_src.is_dir():
-                logging.error(f"Pasta de shaders não encontrado {self.shaders_src} ou shaders_dir é vazio!")
-                raise FileNotFoundError("Shaders folder not found!")
-
-            if not self.script.get("reshade_file", "") or not self.ini_src.is_file():
-                logging.error(f"ReShade.ini não encontrado {self.ini_src} ou reshade_file é vazio!")
-                raise FileNotFoundError("ReShade.ini file not found!")
-
-            if not self.script.get("injector_file", "") or not self.injector.is_file():
-                logging.error(f"Injector.exe não encontrado {self.injector} ou injector_file é vazio!")
-                raise FileNotFoundError("Injector executable not found!")
-
-            if self.xxmi_enabled:
-                if not self.script.get("xxmi_file", "") or not self.xxmi_src.is_file() or self.xxmi_src.name != "XXMI Launcher Config.json":
-                    logging.error(f"XXMI Settings não encontrado {self.xxmi_src} ou xxmi_file é vazio!")
-                    raise FileNotFoundError("XXMI Settings.json not found!")
-            
         except Exception as e:
             return {
                 "status": False,
-                "message": str(e)
+                "message": str(e),
+                "error_type": "installation"
             }
-
-        logging.info(f"All checks passed for {self.selected_code} at {self.game_base}")
+        
+        logging.info(f"All files for {self.game_code} verified successfully!")
         return {
             "status": True,
-            "game_code": self.selected_code
+            "game_code": self.game_code
+        }
+
+
+    def verify_system(self):
+        try:
+            if not self.reshade_src.is_file():
+                logging.error(f"ReShade.ini não encontrado: {self.reshade_src}")
+                raise FileNotFoundError("ReShade.ini file not found!")
+
+            if not self.injector_src.is_file():
+                logging.error(f"Injector.exe não encontrado: {self.injector_src}")
+                raise FileNotFoundError("Injector executable not found!")
+
+            if not self.shaders_src.is_dir():
+                logging.error(f"Pasta de shaders não encontrada: {self.shaders_src}")
+                raise FileNotFoundError("Shaders folder not found!")
+
+            if not self.reshade_dll.is_file():
+                logging.error(f"ReShade64.dll não encontrado: {self.reshade_dll}")
+                raise FileNotFoundError("ReShade64.dll file not found!")
+            
+            if self.xxmi_enabled:
+                if not self.xxmi_src.is_file() or self.xxmi_src.name != "XXMI Launcher Config.json":
+                    logging.error(f"Caminho de XXMI Settings vazio ou não encontrado: {self.xxmi_src}")
+                    raise FileNotFoundError("XXMI Settings not found!")
+
+        except Exception as e:
+            return {
+                "status": False,
+                "message": str(e),
+                "error_type": "system"
+            }
+
+        logging.info(f"All system files have been successfully verified!")
+        return {
+            "status": True
         }
 
     def inject_game(self):
-        self.game_info = {
-            "exe": self.code.get("exe", ""),
-            "subpath": self.code.get("subpath", "")
-        }
-        self.game_dir = (self.game_base / self.game_info["subpath"]).resolve()
-        self.exe_path = self.game_dir / self.game_info["exe"] if self.game_dir else None
-
-        link_shader = self.game_dir / Path(self.script["shaders_dir"]).name
+        link_shader = self.game_dir / self.shaders_src.name
         if not link_shader.exists():
             try:
-                logging.info(f"Criando link simbólico: {link_shader} -> {resource_path(self.script["shaders_dir"])}")
-                link_shader.symlink_to(resource_path(self.script["shaders_dir"]), target_is_directory=True)
+                logging.info(f"Criando link simbólico: {link_shader} -> {self.shaders_src}")
+                link_shader.symlink_to(self.shaders_src, target_is_directory=True)
             except Exception:
                 logging.info("Falha ao criar o link simbólico!")
 
@@ -106,7 +120,7 @@ class ReshadeSetup():
         ini_dest = self.game_dir / "ReShade.ini"
         if not ini_dest.is_file():
             logging.info(f"Copiando ReShade.ini -> {ini_dest}")
-            shutil.copy2(str(self.ini_src), str(ini_dest))
+            shutil.copy2(str(self.reshade_src), str(ini_dest))
         
         # Run the Injector.exe
         logging.info("Injetando Reshade no jogo...")
@@ -114,9 +128,9 @@ class ReshadeSetup():
             'powershell',
             '-Command',
             'Start-Process',
-            f'-FilePath "{self.injector}"',
+            f'-FilePath "{self.injector_src}"',
             f'-ArgumentList "{self.exe_path.name}"',
-            '-WorkingDirectory', f'"{self.injector.parent}"',
+            '-WorkingDirectory', f'"{self.injector_src.parent}"',
             '-Verb RunAs'
         ]
         subprocess.run(cmd_inject, shell=False)
@@ -133,7 +147,7 @@ class ReshadeSetup():
     
     def xxmi_integration(self, game_code):
         if not self.xxmi_enabled:
-            logging.warning(f"Standard mode (XXMI inactive)")
+            logging.info(f"Standard mode (XXMI inactive)")
             return
 
         IMPORTER_MAP = {
@@ -170,7 +184,18 @@ class ReshadeSetup():
 
 #! Test functions
 #config = load_config()
-#setup_reshade = ReshadeSetup(config["Games"]["honkai_star_rail"], config["Games"]["honkai_star_rail"]["folder"], config["Script"], config["Packages"], config["Launcher"]["xxmi_feature_enabled"])
-#setup_reshade.verification()
-#setup_reshade.inject_game(game_code)
-#setup_reshade.xxmi_integration()
+# setup_reshade = ReshadeSetup(config, "", False)
+# result_install = setup_reshade.verify_installation()
+# result_system = setup_reshade.verify_system()
+
+# message_1 = result_install.get("message", "Tudo certo!")
+# error_type_1 = result_install.get("error_type", "Tudo certo!")
+
+# message_2 = result_system.get("message", "Tudo certo!")
+# error_type_2 = result_system.get("error_type", "Tudo certo!")
+
+# print(f"\nA Mensagem: {message_1}\nO Tipo de erro: {error_type_1}")
+# print(f"\nA Mensagem: {message_2}\nO Tipo de erro: {error_type_2}")
+
+#setup_reshade.inject_game()
+#setup_reshade.xxmi_integration(game_code)

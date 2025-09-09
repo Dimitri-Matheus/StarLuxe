@@ -47,8 +47,8 @@
       "#ffffff"
     ],
     "text_color_disabled": [
-      "#363636",
-      "#363636"
+      "gray50",
+      "gray50"
     ]
   },
   "CTkLabel": {
@@ -77,6 +77,10 @@
     "placeholder_text_color": [
       "#808080",
       "#808080"
+    ],
+    "text_color_disabled": [
+      "gray50",
+      "gray50"
     ]
   },
   "CTkCheckBox": {

@@ -7,7 +7,7 @@ from CTkMessagebox import CTkMessagebox
 from utils.downloader import download_from_github
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
-from utils.paths import resource_path
+from utils.path import resource_path
 from gui.modal import ModalPresets, ModalConfig, ModalStarted
 
 logging.basicConfig(level=logging.INFO)
@@ -61,7 +61,7 @@ class Image_Frame(ctk.CTkFrame):
         self.image_label.configure(image=new_image)
 
 
-class HSRS(ctk.CTk):
+class Starluxe(ctk.CTk):
     def __init__(self, settings: dict):
         super().__init__()
         logging.info("App started")
@@ -175,13 +175,13 @@ class HomePage(BasePage):
             msbox_question.title_label.configure(fg_color="gray14")
 
             if msbox_question.get() == "Yes":
-                reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
-                reshade.inject_game()
+                setup_reshade = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
+                setup_reshade.verify_installation()
+                setup_reshade.inject_game()
                 return
         
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = ModalStarted(self, self.settings)
-            self.modal.focus()
         else:
             self.modal.focus()
 
@@ -189,7 +189,6 @@ class HomePage(BasePage):
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = ModalConfig(self, self.settings)
-            self.modal.focus()
         else:
             self.modal.focus()
 
@@ -258,7 +257,6 @@ class ReshadePage(BasePage):
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = ModalPresets(self, self.settings)
-            self.modal.focus()
         else:
             self.modal.focus()
 
@@ -268,22 +266,34 @@ class ConfigPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         #self.frame.update_image(self.frame.char_image_1)
+        self.path_var = ctk.StringVar()
 
         self.text_1.configure(text="Welcome, Trailblazer!")
 
         self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry.configure(width=717, height=48, corner_radius=8)
+        self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
         self.button_2.configure(text="Next", command=lambda: self.save_path())
 
+        self.path_var.trace_add("write", self.validate_realtime)
+
+    def validate_realtime(self, *args):
+        current_path = self.path_var.get()
+        if os.path.isdir(current_path):
+            self.path_entry.configure(border_color="green")
+        else:
+            self.path_entry.configure(border_color="red")
+
+
     # Check and saves the path in settings.json
     def save_path(self):
-        game_path = self.path_entry.get()
-        setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
-        result = setup_reshade.verification()
+        game_path = self.path_entry.get().strip()
+
+        setup_install = ReshadeSetup(self.settings, game_path, self.settings["Launcher"]["xxmi_feature_enabled"])
+        result = setup_install.verify_installation()
 
         if result["status"] == True:
             game_code = result["game_code"]
@@ -306,9 +316,9 @@ class ConfigPage(BasePage):
 if __name__ == "__main__":
     settings = load_config()
 
-    #* Carrega as configurações antes de executar o aplicativo
+    #* Load settings before starting the application
     ctk.set_default_color_theme(resource_path(settings["Launcher"]["gui_theme"]))
     logging.info("Settings loaded")
 
-    app = HSRS(settings)
+    app = Starluxe(settings)
     app.mainloop()

@@ -2,7 +2,7 @@
 
 import os, requests, logging
 from pathlib import Path
-from utils.paths import resource_path
+from utils.path import resource_path
 #from config import load_config
 
 logging.basicConfig(level=logging.INFO)
@@ -15,7 +15,7 @@ def download_file(url, output_path):
         f.write(response.content)
     logging.info(f"Downloaded {url} → {output_path}")
 
-# TODO: Realizar uma verifição se o arquivo existe ou não
+
 def download_from_github(repo_owner, repo_name, resource, selected_preset, download_dir, result_queue):
     try:
         presets = [p for p in selected_preset if p and p.strip()]
