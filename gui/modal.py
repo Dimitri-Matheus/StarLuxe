@@ -9,7 +9,7 @@ from CTkListbox import *
 #from CTkToolTip import *
 from CTkMessagebox import CTkMessagebox
 from utils.config import save_config, default
-from utils.paths import resource_path
+from utils.path import resource_path
 from utils.injector import ReshadeSetup
 
 logging.basicConfig(level=logging.INFO)
@@ -23,6 +23,7 @@ class ModalPresets(ctk.CTkToplevel):
         self.title("Select Preset")
         self.geometry("300x300")
         self.resizable(width=False, height=False)
+        self.attributes("-topmost",True)
 
         self.selected_presets = []
 
@@ -46,7 +47,7 @@ class ModalPresets(ctk.CTkToplevel):
         self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
         self.save_button.pack(pady=20)
 
-        #TODO: Adicionar um Preview do Preset
+        #? Como adicionar um Preview do Preset
         #self.game_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\image_1.png")), size=(128, 71))
         #CTkToolTip(listbox, message="", image=self.game_1, corner_radius=8, bg_color="#000001", fg_color="transparent", padding=(1.5, 1.5), alpha=0.95)
 
@@ -74,6 +75,7 @@ class ModalConfig(ctk.CTkToplevel):
         self.title("Settings")
         self.geometry("700x550")
         self.resizable(width=False, height=False)
+        self.attributes("-topmost",True)
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
@@ -131,6 +133,7 @@ class ModalConfig(ctk.CTkToplevel):
         self.text_3 = ctk.CTkLabel(self.scrollable_frame, text="Integration", font=ctk.CTkFont(size=18))
         self.text_3.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
+        # Integration
         self.switch_var = ctk.BooleanVar(value=self.settings["Launcher"]["xxmi_feature_enabled"])
         self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
         
@@ -138,11 +141,23 @@ class ModalConfig(ctk.CTkToplevel):
         self.switch.configure(switch_width=36, switch_height=20, variable=self.switch_var)
         self.switch.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
 
-        self.browser_button = ctk.CTkButton(self.scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=11, weight="bold"), command=lambda: self.select_file())
-        self.browser_button.configure(width=78, height=28, corner_radius=8)
-        self.browser_button.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
-        if not self.switch_var.get():
-            self.browser_button.grid_remove()
+        self.switch_2 = ctk.CTkSwitch(self.scrollable_frame, text="Reshade+", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
+        self.switch_2.configure(switch_width=36, switch_height=20)
+        self.switch_2.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
+
+        # XXMI Path
+        self.text_4 = ctk.CTkLabel(self.scrollable_frame, text="XXMI Settings", font=ctk.CTkFont(size=18))
+        self.text_4.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+
+        self.settings_entry = ctk.CTkEntry(self.scrollable_frame, placeholder_text="C:/Path/to/config.json", font=ctk.CTkFont(family="Verdana", size=14))
+        self.settings_entry.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
+        self.settings_entry.grid(row=r, column=0, padx=25, pady=5, sticky="w"); r + 1
+
+        self.browser_button = ctk.CTkButton(self.scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.settings_entry))
+        self.browser_button.configure(width=123, height=38, corner_radius=8, state="disabled", fg_color="#222222")
+        self.browser_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="w"); r += 1
+
+        self.switch_toogle()
 
         # Settings Manager
         self.button_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -158,49 +173,61 @@ class ModalConfig(ctk.CTkToplevel):
 
     def switch_toogle(self):
         if self.switch_var.get():
-            self.browser_button.grid()
+            self.settings_entry.configure(state="normal", fg_color="#515151", border_color="#515151")
+            self.browser_button.configure(state="normal", fg_color="#4b9be5")
+            file_path = self.settings["Script"].get("xxmi_file", "")
+            if file_path:
+                self.settings_entry.insert(0, file_path)
         else:
-            self.browser_button.grid_remove()
+            self.settings_entry.configure(state="disabled", fg_color="#333333", border_color="#333333")
+            self.browser_button.configure(state="disabled", fg_color="#222222")
+
 
     def select_folder(self, widget):
-        foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
+        foldername = filedialog.askdirectory(parent=self, title='Open folder', initialdir='/')
         if foldername:
             widget.delete(0, "end")
             widget.insert(0, foldername)
 
-    def select_file(self):
-        filename = filedialog.askopenfilename(title="Open XXMI Settings", initialdir="/", defaultextension=".json", filetypes=[("JSON files","*.json"), ("All files", "*.*")])
+
+    def select_file(self, widget):
+        filename = filedialog.askopenfilename(parent=self, title="Open XXMI Settings", initialdir="/", defaultextension=".json", filetypes=[("JSON files","*.json"), ("All files", "*.*")])
         if filename:
             self.xxmi_file_path = filename
-            msbox_info = CTkMessagebox(title="Selected File", message=f"{filename}", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
+            widget.delete(0, "end")
+            widget.insert(0, filename)
 
-    #TODO: Refatorar essa parte
+
     def save_path(self, path_entries: dict[str, ctk.CTkEntry]):
         errors = []
+
+        xxmi_config_path = self.settings_entry.get().strip()
+        self.settings["Script"]["xxmi_file"] = xxmi_config_path
+
+        setup_system = ReshadeSetup(self.settings, "", self.switch_var.get())
+        result_system = setup_system.verify_system()
+
+        if not result_system["status"]:
+            errors.append(result_system.get("message"))
+        else:
+            self.settings["Launcher"]["xxmi_feature_enabled"] = self.switch_var.get()
         
         for game_code, entry in path_entries.items():
             game_path = entry.get().strip()
             if not game_path:
                 continue
 
-            self.settings["Script"]["xxmi_file"] = self.xxmi_file_path
-            setup_reshade = ReshadeSetup(self.settings["Games"], game_path, self.settings["Script"], self.settings["Packages"], self.switch_var.get())
-            result = setup_reshade.verification()
+            setup_install = ReshadeSetup(self.settings, game_path, self.switch_var.get())
+            result_install = setup_install.verify_installation()
             
-            if result["status"] == True:
-                game_code = result["game_code"]
-                self.settings["Games"][game_code]["folder"] = game_path
-                self.settings["Launcher"]["xxmi_feature_enabled"] = self.switch_var.get()
+            if not result_install["status"]:
+                name = game_code.replace("_", " ").title()
+                errors.append(result_install.get("message").replace("Game", name))
             else:
-                message = result.get("message", "Unknown error")
-                if "XXMI" in message:
-                    if message not in errors:
-                        errors.append(message)
-                else:
-                    pretty_name = game_code.replace("_", " ").title()
-                    errors.append(f"{pretty_name}: {message}")
-
+                game_code = result_install["game_code"]
+                self.settings["Games"][game_code]["folder"] = game_path
+    
+        errors = list(dict.fromkeys(errors))
         if errors:
             msbox_error = CTkMessagebox(title="Error", message="\n".join(errors), icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
@@ -233,6 +260,7 @@ class ModalStarted(ctk.CTkToplevel):
         self.title("Start Your Game")
         self.geometry("700x340")
         self.resizable(width=False, height=False)
+        self.attributes("-topmost",True)
 
         for col in range(3):
             self.grid_columnconfigure(col, weight=1)
@@ -278,9 +306,10 @@ class ModalStarted(ctk.CTkToplevel):
         self.settings["Launcher"]["last_played_game"] = game_code
         save_config(self.settings)
 
-        reshade = ReshadeSetup(game_data, folder, self.settings["Script"], self.settings["Packages"], self.settings["Launcher"]["xxmi_feature_enabled"])
-        reshade.xxmi_integration(game_code)
-        reshade.inject_game()
+        setup_reshade = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
+        setup_reshade.verify_installation()
+        setup_reshade.xxmi_integration(game_code)
+        setup_reshade.inject_game()
         self.destroy()
 
     
