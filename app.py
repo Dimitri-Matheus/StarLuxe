@@ -175,9 +175,10 @@ class HomePage(BasePage):
             msbox_question.title_label.configure(fg_color="gray14")
 
             if msbox_question.get() == "Yes":
-                setup_reshade = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
-                setup_reshade.verify_installation()
-                setup_reshade.inject_game()
+                setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
+                setup.addon_support()
+                setup.verify_installation()
+                setup.inject_game()
                 return
         
         if self.modal is None or not self.modal.winfo_exists():
@@ -266,27 +267,16 @@ class ConfigPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         #self.frame.update_image(self.frame.char_image_1)
-        self.path_var = ctk.StringVar()
 
         self.text_1.configure(text="Welcome, Trailblazer!")
 
         self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
+        self.path_entry.configure(width=717, height=48, corner_radius=8)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
         self.button_2.configure(text="Next", command=lambda: self.save_path())
-
-        self.path_var.trace_add("write", self.validate_realtime)
-
-    def validate_realtime(self, *args):
-        current_path = self.path_var.get()
-        if os.path.isdir(current_path):
-            self.path_entry.configure(border_color="green")
-        else:
-            self.path_entry.configure(border_color="red")
-
 
     # Check and saves the path in settings.json
     def save_path(self):

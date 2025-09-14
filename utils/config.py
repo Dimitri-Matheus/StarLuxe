@@ -9,7 +9,8 @@ default = {
     "Launcher": {
         "gui_theme": "theme\\default.json",
         "last_played_game": "",
-        "xxmi_feature_enabled": False
+        "xxmi_feature_enabled": False,
+        "reshade_feature_enabled": False
     },
     "Packages": {
         "selected": "",
@@ -26,6 +27,8 @@ default = {
         "reshade_file": "script/ReShade.ini",
         "injector_file": "script/Injector.exe",
         "reshade_dll": "script/ReShade64.dll",
+        "reshade_config": "script/ReShade64.json",
+        "reshade_xr_config": "script/ReShade64_XR.json",
         "xxmi_file": ""
     },
     "Games": {
