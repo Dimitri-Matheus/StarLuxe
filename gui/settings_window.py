@@ -1,12 +1,10 @@
-"""Defines modal windows for the application"""
+"""Defines the settings window for the application"""
 
 from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
-import PIL.Image, PIL.ImageTk
 import os, sys, logging
-from CTkListbox import *
-#from CTkToolTip import *
+# from CTkToolTip import *
 from CTkMessagebox import CTkMessagebox
 from utils.config import save_config, default
 from utils.path import resource_path
@@ -14,67 +12,16 @@ from utils.injector import ReshadeSetup
 
 logging.basicConfig(level=logging.INFO)
 
-class ModalPresets(ctk.CTkToplevel):
+class SettingsDialog(ctk.CTkToplevel):
     def __init__(self, master, settings_load: dict):
         super().__init__(master)
-        self.settings = settings_load
-
-        self.title("Select Preset")
-        self.geometry("300x300")
-        self.resizable(width=False, height=False)
-        self.attributes("-topmost",True)
-
-        self.selected_presets = []
-
-        def show_value(selected_option):
-            logging.info(f"Select: {selected_option}")
-            self.selected_presets = selected_option
-        
-        
-        listbox = CTkListbox(self, font=ctk.CTkFont(family="Verdana", size=15), multiple_selection=True, command=show_value, highlight_color="#515151")
-        listbox.pack(fill="both", expand=True, padx=10, pady=20)
-
-        for p in self.settings["Packages"]["available"]:
-            listbox.insert("end", p)
-
-        for i in range(listbox.size()):
-            value = listbox.get(i)
-            if value in self.settings["Packages"]["selected"]:
-                listbox.activate(i)
-    
-        self.save_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=self.save_preset)
-        self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
-        self.save_button.pack(pady=20)
-
-        #? Como adicionar um Preview do Preset
-        #self.game_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\image_1.png")), size=(128, 71))
-        #CTkToolTip(listbox, message="", image=self.game_1, corner_radius=8, bg_color="#000001", fg_color="transparent", padding=(1.5, 1.5), alpha=0.95)
-
-    def save_preset(self):
-        if self.selected_presets:
-            self.settings["Packages"]["selected"] = self.selected_presets
-        else:
-            self.settings["Packages"]["selected"] = ""
-        
-        save_config(self.settings)
-        logging.info(f"Saved preset: {self.settings["Packages"]["selected"]}")
-        self.destroy()
-
-    def iconbitmap(self, bitmap):
-        self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
-
-
-# Window #2
-class ModalConfig(ctk.CTkToplevel):
-    def __init__(self, master, settings_load: dict):
-        super().__init__(master)
+        self.transient(master)
         self.settings = settings_load
 
         self.title("Settings")
         self.geometry("700x550")
         self.resizable(width=False, height=False)
-        self.attributes("-topmost",True)
+        self.grab_set()
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
@@ -85,25 +32,22 @@ class ModalConfig(ctk.CTkToplevel):
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
         self.scrollable_frame.grid_columnconfigure(1, weight=0)
 
-        game_configs = [
-            ("genshin_impact",   "Genshin Impact"),
-            ("honkai_star_rail", "Honkai Star Rail"),
-            ("wuthering_waves",  "Wuthering Waves")
-        ]
-
         self.path_entries = {}
         self.xxmi_file_path = ""
+        self.game_list = list(self.settings["Games"].items())
         r = 0
 
         # Title #1
         self.title_1 = ctk.CTkLabel(self.scrollable_frame, text="Game Settings", font=ctk.CTkFont(size=24, weight="bold"))
         self.title_1.grid(row=r, column=0, columnspan=2, sticky="w", padx=20, pady=(10, 5)); r += 1
 
-        for game_id, game_name in game_configs:
-            self.text_1 = ctk.CTkLabel(self.scrollable_frame, text=f"Path Game - {game_name}", font=ctk.CTkFont(size=18))
+        for game_id, game_data in self.game_list[:4]:
+            name = game_data.get("display_name", game_id).replace("_", " ").title()
+
+            self.text_1 = ctk.CTkLabel(self.scrollable_frame, text=f"Path Game - {name}", font=ctk.CTkFont(size=18))
             self.text_1.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
             
-            self.path_entry = ctk.CTkEntry(self.scrollable_frame, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14), )
+            self.path_entry = ctk.CTkEntry(self.scrollable_frame, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
             self.path_entry.configure(width=478, height=38, corner_radius=8)
             self.path_entry.grid(row=r, column=0, padx=25, pady=5, sticky="w")
 
@@ -117,12 +61,9 @@ class ModalConfig(ctk.CTkToplevel):
 
             self.path_entries[game_id] = self.path_entry
 
-        # separator = ctk.CTkFrame(self.scrollable_frame, height=1, fg_color="#ffffff")
-        # separator.grid(row=r, column=0, columnspan=2, sticky="ew", padx=20, pady=15); r += 1
-
         # Title #2
         self.title_2 = ctk.CTkLabel(self.scrollable_frame, text="App Settings", font=ctk.CTkFont(size=24, weight="bold"))
-        self.title_2.grid(row=r, column=0, columnspan=2, sticky="w", padx=20, pady=(10, 5)); r += 1
+        self.title_2.grid(row=r, column=0, columnspan=2, sticky="w", padx=20, pady=(20, 5)); r += 1
 
         # Themes
         self.text_2 = ctk.CTkLabel(self.scrollable_frame, text="Theme", font=ctk.CTkFont(size=18))
@@ -148,6 +89,9 @@ class ModalConfig(ctk.CTkToplevel):
         self.switch_addon = ctk.CTkSwitch(self.scrollable_frame, text="Reshade+", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_addon.configure(switch_width=36, switch_height=20, variable=self.addon_var)
         self.switch_addon.grid(row=r, column=0, padx=25, pady=(10, 5), sticky="w"); r += 1
+
+        #? Como adicionar um Preview do Preset
+        # CTkToolTip(self.switch_addon, message="Scroll down and enable the XXMI feature. Then click the Browser button", corner_radius=8, bg_color="#DCDCDC", fg_color="transparent", padding=(1.5, 1.5), alpha=0.95, font=ctk.CTkFont(family="Verdana", size=14), border_color="gray20", border_width=1, justify="center", text_color="#000001")
 
         # XXMI Path
         self.text_4 = ctk.CTkLabel(self.scrollable_frame, text="Configuration File", font=ctk.CTkFont(size=18))
@@ -250,74 +194,6 @@ class ModalConfig(ctk.CTkToplevel):
         python = sys.executable
         os.execv(python, [python] + sys.argv)
     
-    
-    def iconbitmap(self, bitmap):
-        self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
-
-
-# Window #3
-class ModalStarted(ctk.CTkToplevel):
-    def __init__(self, master, settings_load: dict):
-        super().__init__(master)
-        self.settings = settings_load
-
-        self.title("Start Your Game")
-        self.geometry("700x340")
-        self.resizable(width=False, height=False)
-        self.attributes("-topmost",True)
-
-        for col in range(3):
-            self.grid_columnconfigure(col, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(1, weight=0)
-        self.grid_rowconfigure(2, weight=0)
-        self.grid_rowconfigure(3, weight=1)
-
-        self.game_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/GI.png")), size=(128, 128))
-        self.game_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/HSR.png")), size=(128, 128))
-        self.game_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/WuWa.png")), size=(128, 128))
-
-        self.button_1 = ctk.CTkButton(self, text="", image=self.game_1, command=lambda: self.open_game("genshin_impact"))
-        self.button_1.configure(width=128, height=128, corner_radius=8, fg_color="transparent")
-        self.button_1.grid(row=1, column=0, sticky="n", padx=10)
-
-        self.button_2 = ctk.CTkButton(self, text="", image=self.game_2, command=lambda: self.open_game("honkai_star_rail"))
-        self.button_2.configure(width=128, height=128, corner_radius=8, fg_color="transparent")
-        self.button_2.grid(row=1, column=1, sticky="n", padx=10)
-
-        self.button_3 = ctk.CTkButton(self, text="", image=self.game_3, command=lambda: self.open_game("wuthering_waves"))
-        self.button_3.configure(width=128, height=128, corner_radius=8, fg_color="transparent")
-        self.button_3.grid(row=1, column=2, sticky="n", padx=10)
-
-        self.text_1 = ctk.CTkLabel(self, text="Genshin Impact", font=ctk.CTkFont(size=20))
-        self.text_1.grid(row=2, column=0, sticky="n", pady=(10, 0))
-
-        self.text_2 = ctk.CTkLabel(self, text="Honkai Star Rail", font=ctk.CTkFont(size=20))
-        self.text_2.grid(row=2, column=1, sticky="n", pady=(10, 0))
-
-        self.text_3 = ctk.CTkLabel(self, text="Wuthering Waves", font=ctk.CTkFont(size=20))
-        self.text_3.grid(row=2, column=2, sticky="n", pady=(10, 0))
-
-    def open_game(self, game_code):
-        game_data = self.settings["Games"][game_code]
-        folder = game_data.get("folder", "").strip()
-
-        if not folder:
-            msbox_error = CTkMessagebox(title="Info", message="Please set the game folder first in Settings", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
-            return
-
-        self.settings["Launcher"]["last_played_game"] = game_code
-        save_config(self.settings)
-
-        setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
-        setup.verify_installation()
-        setup.addon_support()
-        setup.xxmi_integration(game_code)
-        setup.inject_game()
-        self.destroy()
-
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False

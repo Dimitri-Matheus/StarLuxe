@@ -1,7 +1,7 @@
 """Utils for all related to the configuration file"""
 
 import os, json
-import win32security, win32api, ntsecuritycon
+import win32security, ntsecuritycon
 
 config_file = "settings.json"
 
@@ -32,21 +32,42 @@ default = {
         "xxmi_file": ""
     },
     "Games": {
-        "wuthering_waves": {
-            "folder": "",
-            "exe": "Client-Win64-Shipping.exe",
-            "subpath":  "Client/Binaries/Win64"
-        },
         "genshin_impact": {
+            "icon_path": "assets/icon/GI.png",
             "folder": "",
             "exe": "GenshinImpact.exe",
             "subpath": ""
         },
         "honkai_star_rail": {
+            "icon_path": "assets/icon/HSR.png",
             "folder": "",
             "exe": "StarRail.exe",
             "subpath": ""
-        }
+        },
+        "wuthering_waves": {
+            "icon_path": "assets/icon/WuWa.png",
+            "folder": "",
+            "exe": "Client-Win64-Shipping.exe",
+            "subpath":  "Client/Binaries/Win64"
+        },
+        "zenless_zone_zero": {
+            "icon_path": "assets/icon/ZZZ.png",
+            "folder": "",
+            "exe": "ZenlessZoneZero.exe",
+            "subpath": ""
+        },
+        "game_slot_1": {
+            "icon_path": "assets/icon/empty.png",
+            "folder": "",
+            "exe": "",
+            "subpath": ""
+        },
+        "game_slot_2": {
+            "icon_path": "assets/icon/empty.png",
+            "folder": "",
+            "exe": "",
+            "subpath": ""
+        },
     }
 }
 

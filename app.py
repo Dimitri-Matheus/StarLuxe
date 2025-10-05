@@ -2,13 +2,13 @@ from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
-import os, sys, logging, threading, queue
+import logging, threading, queue
 from CTkMessagebox import CTkMessagebox
 from utils.downloader import download_from_github
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
-from gui.modal import ModalPresets, ModalConfig, ModalStarted
+from gui import SettingsDialog, PresetsDialog, LauncherDialog
 
 logging.basicConfig(level=logging.INFO)
 
@@ -84,7 +84,7 @@ class Starluxe(ctk.CTk):
 
         # Controller the pages
         self.pages = {}
-        for PageClass in (HomePage, ReshadePage, ConfigPage):
+        for PageClass in (HomePage, ReshadePage, ConfigPage, SetupPage):
             page = PageClass(self.container, self)
             self.pages[PageClass.__name__] = page
             page.grid(row=0, column=0, sticky="nsew")
@@ -96,7 +96,7 @@ class Starluxe(ctk.CTk):
         if initial_page:
             self.show_page("HomePage")
         else:
-            self.show_page("ConfigPage")
+            self.show_page("SetupPage")
 
     # Manager the pages
     def show_page(self, page_name: str):
@@ -182,14 +182,14 @@ class HomePage(BasePage):
                 return
         
         if self.modal is None or not self.modal.winfo_exists():
-            self.modal = ModalStarted(self, self.settings)
+            self.modal = LauncherDialog(self, self.settings)
         else:
             self.modal.focus()
 
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
-            self.modal = ModalConfig(self, self.settings)
+            self.modal = SettingsDialog(self, self.settings)
         else:
             self.modal.focus()
 
@@ -257,7 +257,7 @@ class ReshadePage(BasePage):
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
-            self.modal = ModalPresets(self, self.settings)
+            self.modal = PresetsDialog(self, self.settings)
         else:
             self.modal.focus()
 
@@ -267,20 +267,33 @@ class ConfigPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         #self.frame.update_image(self.frame.char_image_1)
-
-        self.text_1.configure(text="Welcome, Trailblazer!")
+        self.path_var = ctk.StringVar()
 
         self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry.configure(width=717, height=48, corner_radius=8)
+        self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
+        self.path_var.trace_add("write", self.update_button)
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
-        self.button_2.configure(text="Next", command=lambda: self.save_path())
+        self.button_2.configure(command=lambda: self.save_path())
+        self.update_button()
+
+    def update_button(self, *args):
+        current_path = self.path_entry.get()
+        self.path_entry.configure(placeholder_text="C:/Games...")
+        if not current_path:
+            self.button_2.configure(text="Skip")
+        else:
+            self.button_2.configure(text="Next")
 
     # Check and saves the path in settings.json
     def save_path(self):
         game_path = self.path_entry.get().strip()
+
+        if not game_path:
+            self.controller.show_page("ReshadePage")
+            return
 
         setup_install = ReshadeSetup(self.settings, game_path, self.settings["Launcher"]["xxmi_feature_enabled"])
         result = setup_install.verify_installation()
@@ -301,6 +314,25 @@ class ConfigPage(BasePage):
         if foldername:
             self.path_entry.delete(0, "end")
             self.path_entry.insert(0, foldername)
+
+
+# Fourth Page
+class SetupPage(BasePage):
+    def __init__(self, parent, controller):
+        super().__init__(parent, controller)
+        self.text_1.configure(text="Welcome, Trailblazer!")
+        #self.frame.update_image(self.frame.char_image_1)
+
+        self.text_1.configure(text="Welcome, Trailblazer!")
+        self.text_1.grid_configure(pady=(30, 5))
+        self.text_2.configure(text="Enhance your game visuals with the \nReShade")
+        self.text_2.grid_configure(pady=(20, 30))
+
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/arrow_icon.png")), size=(32, 32))
+        self.button_1.configure(image=self.button_icon, width=0, height=0, fg_color="transparent", command=lambda: self.controller.show_page("ConfigPage"))
+        self.button_1.grid_configure(pady=(40, 10))
+
+        self.button_2.grid_forget()
 
 
 if __name__ == "__main__":
