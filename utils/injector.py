@@ -134,7 +134,8 @@ class ReshadeSetup():
         if not ini_dest.is_file():
             logging.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
-        
+
+        #TODO: Tentar esconder o powershell na execução
         # Run the Injector.exe
         logging.info("Injecting ReShade...")
         cmd_inject = [
@@ -209,8 +210,8 @@ class ReshadeSetup():
 
 
     def addon_support(self):
-        standard_folder = resource_path("script/resources/standard")
-        addon_folder = resource_path("script/resources/addon")
+        standard_folder = resource_path("resources/standard")
+        addon_folder = resource_path("resources/addon")
 
         if self.reshade_enabled:
             source_file = addon_folder
