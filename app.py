@@ -152,7 +152,7 @@ class HomePage(BasePage):
 
         self.back_button = ctk.CTkButton(self, text="", image=self.button_icon, command=self.on_back)
         self.back_button.configure(width=0, height=0, fg_color="transparent")
-        self.back_button.grid(row=0, column=0, sticky="nw", padx=10, pady=10)
+        self.back_button.grid(row=0, column=0, padx=10, pady=10, sticky="nw")
 
         self.text_1.grid_forget()
         

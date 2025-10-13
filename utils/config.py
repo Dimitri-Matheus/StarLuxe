@@ -55,19 +55,7 @@ default = {
             "folder": "",
             "exe": "ZenlessZoneZero.exe",
             "subpath": ""
-        },
-        "game_slot_1": {
-            "icon_path": "assets/icon/empty.png",
-            "folder": "",
-            "exe": "",
-            "subpath": ""
-        },
-        "game_slot_2": {
-            "icon_path": "assets/icon/empty.png",
-            "folder": "",
-            "exe": "",
-            "subpath": ""
-        },
+        }
     }
 }
 
