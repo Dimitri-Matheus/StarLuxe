@@ -26,9 +26,9 @@ class LauncherDialog(ctk.CTkToplevel):
         self.resizable(width=False, height=False)
         self.grab_set()
 
-        self.prev_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/back_icon.png")), size=(32, 32))
-        self.next_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/next_icon.png")), size=(32, 32))
-        self.add_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/add_icon.png")), size=(32, 32))
+        self.prev_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/back_icon.png")), size=(32, 32))
+        self.next_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/next_icon.png")), size=(32, 32))
+        self.add_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/add_icon.png")), size=(32, 32))
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
@@ -132,7 +132,7 @@ class LauncherDialog(ctk.CTkToplevel):
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
+        super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))
 
 
 class GamePage(ctk.CTkFrame):
@@ -213,7 +213,7 @@ class InputGame(ctk.CTkToplevel):
         self.grid_columnconfigure(1, weight=0)
 
         # Container 1
-        self.icon_image = resource_path("assets\\icon/empty.png")
+        self.icon_image = resource_path("assets/icon/empty.png")
         self.icon = ctk.CTkImage(PIL.Image.open(self.icon_image), size=(128, 128))
         self.icon_preview = ctk.CTkLabel(self, text="", image=self.icon)
         self.icon_preview.grid(row=r, column=0, columnspan=2, pady=30, sticky="ew"); r += 1
@@ -328,6 +328,7 @@ class InputGame(ctk.CTkToplevel):
             "subpath": ""
         }
 
+        #TODO: Refatorar este código
         games = self.settings.setdefault("Games", {})
         if not self.game_edit:
             games[game_name] = settings_data
@@ -343,6 +344,6 @@ class InputGame(ctk.CTkToplevel):
         
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
+        super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))
 
     

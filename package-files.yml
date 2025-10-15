@@ -1,0 +1,17 @@
+# yamllint disable rule:line-length
+# yamllint disable rule:indentation
+# yamllint disable rule:comments-indentation
+# too many spelling things, spell-checker: disable
+
+# data-files: include non-Python files in the distribution
+- module-name: __main__
+  data-files:
+    dirs:
+      - 'assets'
+      - 'theme'
+      - 'script/reshade-shaders'
+
+    patterns:
+      - 'script/*.*'
+      - 'resources/addon/*.*'
+      - 'resources/standard/*.*'

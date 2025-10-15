@@ -8,6 +8,7 @@
 
 # Local user configuration file
 settings.json
+build-pyinstaller/
 
 # Created by git when using merge tools for conflicts
 *.BACKUP.*
@@ -31,10 +32,8 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
-develop-eggs/
 dist/
 downloads/
-eggs/
 .eggs/
 lib/
 lib64/
@@ -48,11 +47,15 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+# Nuitka
+#  These files are generated during Nuitka compilation.
+#  They include build caches, reports, and packaging metadata.
+__nuitka_build__/
+__compiled__/
+compilation-report.xml
+*.dist/
+*.onefile-build/
+*.onefile-temp/
 
 # Installer logs
 pip-log.txt

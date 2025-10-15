@@ -21,7 +21,7 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
         presets = [p for p in selected_preset if p and p.strip()]
         if not presets:
             logging.error("You haven't selected a preset!")
-            raise ValueError("Please select at least one preset before downloading!")
+            raise ValueError("Select a preset before downloading!")
 
         if not download_dir:
             download_dir = resource_path(Path(__file__).parent / resource / "Presets")
