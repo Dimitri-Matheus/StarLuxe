@@ -2,12 +2,13 @@
 
 import os, json
 import win32security, ntsecuritycon
+from utils.path import resource_path
 
-config_file = "settings.json"
+config_path = resource_path("settings.json")
 
 default = {
     "Launcher": {
-        "gui_theme": "theme\\default.json",
+        "gui_theme": "theme/default.json",
         "last_played_game": "",
         "xxmi_feature_enabled": False,
         "reshade_feature_enabled": False
@@ -75,15 +76,15 @@ def grant_user_access(filepath: str):
         win32security.SetFileSecurity(filepath, win32security.DACL_SECURITY_INFORMATION, sd)
 
     except Exception as e:
-        print(f"Falha ao definir permissões para o arquivo {filepath}: {e}")
+        print(f"Failed to set permissions for the file {filepath}: {e}")
 
 
 def load_config() -> dict:
-    if not os.path.exists(config_file):
+    if not os.path.exists(config_path):
         save_config(default)
         return default.copy()
     try:
-        with open(config_file, "r", encoding="utf-8") as file:
+        with open(config_path, "r", encoding="utf-8") as file:
             return json.load(file)
     except json.JSONDecodeError:
         save_config(default)
@@ -91,12 +92,21 @@ def load_config() -> dict:
 
 
 def save_config(config: dict):
-    with open(config_file, "w", encoding="utf-8") as file:
+    with open(config_path, "w", encoding="utf-8") as file:
         json.dump(config, file, indent=4, ensure_ascii=False)
-    grant_user_access(config_file)
+    grant_user_access(str(config_path))
+
+
+def delete_config():
+    try:
+        if config_path.is_file():
+            config_path.unlink()
+    except Exception as e:
+        print(f"Failed to delete the configuration file: {e}")
 
 
 #! Test functions
-#config = load_config()
-#config["theme"] = "dark"
-#save_config(config)
+# config = load_config()
+# config["theme"] = "dark"
+# save_config(config)
+# delete_config()

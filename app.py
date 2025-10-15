@@ -1,3 +1,26 @@
+# Compilation mode, command options
+# nuitka-project: --mode=standalone
+# nuitka-project: --output-dir=build
+# nuitka-project: --output-filename=Starluxe.exe
+# nuitka-project: --windows-console-mode=disable
+
+# UAC Configuration
+# nuitka-project: --windows-uac-admin
+# nuitka-project: --report=compilation-report.xml
+# nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
+
+# Metadata
+# nuitka-project: --product-version='1.3'
+# nuitka-project: --company-name='Dimit'
+# nuitka-project: --product-name='Starluxe'
+# nuitka-project: --file-description='A tool for injecting ReShade'
+
+# Data files
+# nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/package-files.yml
+
+# The Tkinter plugin
+# nuitka-project: --enable-plugin=tk-inter
+
 from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
@@ -49,7 +72,7 @@ class FadeInLabel(ctk.CTkLabel):
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, width=256, height=256)
-        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets/logo/logo.png")), size=(157, 147))
         #self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
         #self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
         #self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
@@ -106,7 +129,7 @@ class Starluxe(ctk.CTk):
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
+        super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))
 
 
 # Default Layout
@@ -146,7 +169,7 @@ class HomePage(BasePage):
         super().__init__(parent, controller)
         self.modal = None
         self.previous_page = "ReshadePage"
-        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/back_icon.png")), size=(32, 32))
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/back_icon.png")), size=(32, 32))
         #self.frame.update_image(self.frame.char_image_4)
         self.frame.grid(pady=40)
 
@@ -189,7 +212,7 @@ class HomePage(BasePage):
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
-            self.modal = SettingsDialog(self, self.settings)
+            self.modal = SettingsDialog(self, self.settings, controller=self.controller)
         else:
             self.modal.focus()
 
@@ -328,7 +351,7 @@ class SetupPage(BasePage):
         self.text_2.configure(text="Enhance your game visuals with the \nReShade")
         self.text_2.grid_configure(pady=(20, 30))
 
-        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets\\icon/arrow_icon.png")), size=(32, 32))
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/arrow_icon.png")), size=(32, 32))
         self.button_1.configure(image=self.button_icon, width=0, height=0, fg_color="transparent", command=lambda: self.controller.show_page("ConfigPage"))
         self.button_1.grid_configure(pady=(40, 10))
 

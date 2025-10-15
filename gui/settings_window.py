@@ -6,16 +6,17 @@ import customtkinter as ctk
 import os, sys, logging
 # from CTkToolTip import *
 from CTkMessagebox import CTkMessagebox
-from utils.config import save_config, default
+from utils.config import save_config, delete_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
 
 logging.basicConfig(level=logging.INFO)
 
 class SettingsDialog(ctk.CTkToplevel):
-    def __init__(self, master, settings_load: dict):
+    def __init__(self, master, settings_load: dict, controller):
         super().__init__(master)
         self.transient(master)
+        self.controller = controller
         self.settings = settings_load
 
         self.title("Settings")
@@ -185,16 +186,22 @@ class SettingsDialog(ctk.CTkToplevel):
         save_config(self.settings)
         self.destroy()
 
+        
     def reset_config(self):
-        save_config(default.copy())
-        self.settings.clear()
-        self.settings.update(default)
-        self.destroy()
-        logging.info("Settings have been restored to default!")
-        python = sys.executable
-        os.execv(python, [python] + sys.argv)
+        msbox_warning = CTkMessagebox(title="Warning", message="Restore defaults and restart the app?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")
+        msbox_warning.title_label.configure(fg_color="gray14")
+
+        if msbox_warning.get() == "Ok":
+            delete_config()
+            logging.info("Settings have been restored to default!")
+            try:
+                exec_path = sys.argv[0]
+                os.startfile(exec_path)
+                self.controller.destroy()
+            except Exception as e:
+                logging.error(f"Failed to restart the application: {e}")
     
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
+        super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))

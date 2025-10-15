@@ -60,4 +60,4 @@ class PresetsDialog(ctk.CTkToplevel):
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
-        super().wm_iconbitmap(resource_path('assets\\icon/window_icon.ico'))
+        super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))
