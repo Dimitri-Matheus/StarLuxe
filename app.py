@@ -199,8 +199,9 @@ class HomePage(BasePage):
 
             if msbox_question.get() == "Yes":
                 setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
-                setup.addon_support()
                 setup.verify_installation()
+                setup.addon_support()
+                setup.xxmi_integration(last_game)
                 setup.inject_game()
                 return
         

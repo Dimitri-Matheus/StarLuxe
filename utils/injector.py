@@ -2,7 +2,9 @@
 
 import os, sys, shutil, subprocess, logging, json, hashlib
 from pathlib import Path
-#from config import load_config
+# from pymem import Pymem
+# from pymem.process import inject_dll
+# from config import load_config
 
 logging.basicConfig(level=logging.INFO)
 
@@ -135,7 +137,6 @@ class ReshadeSetup():
             logging.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
 
-        #TODO: Tentar esconder o powershell na execução
         # Run the Injector.exe
         logging.info("Injecting ReShade...")
         cmd_inject = [
@@ -167,7 +168,8 @@ class ReshadeSetup():
         IMPORTER_MAP = {
             "genshin_impact": "GIMI",
             "honkai_star_rail": "SRMI",
-            "wuthering_waves": "WWMI"
+            "wuthering_waves": "WWMI",
+            "zenless_zone_zero": "ZZMI"
         }
 
         importer_key = IMPORTER_MAP.get(game_code)
@@ -239,19 +241,19 @@ class ReshadeSetup():
 
 
 #! Test functions
-#config = load_config()
-#setup_reshade = ReshadeSetup(config, "", False)
-#result_install = setup_reshade.verify_installation()
-#result_system = setup_reshade.verify_system()
-#setup_reshade.inject_game()
-#setup_reshade.xxmi_integration(game_code)
-#setup_reshade.addon_support()
+# config = load_config()
+# setup_reshade = ReshadeSetup(config, "D:/Games/ZenlessZoneZero Game", False)
+# result_install = setup_reshade.verify_installation()
+# result_system = setup_reshade.verify_system()
+# setup_reshade.inject_game()
+# setup_reshade.xxmi_integration(game_code)
+# setup_reshade.addon_support()
 
 # message_1 = result_install.get("message", "Tudo certo!")
 # error_type_1 = result_install.get("error_type", "Tudo certo!")
 
-#message_2 = result_system.get("message", "Tudo certo!")
-#error_type_2 = result_system.get("error_type", "Tudo certo!")
+# message_2 = result_system.get("message", "Tudo certo!")
+# error_type_2 = result_system.get("error_type", "Tudo certo!")
 
 # print(f"\nA Mensagem: {message_1}\nO Tipo de erro: {error_type_1}")
-#print(f"\nA Mensagem: {message_2}\nO Tipo de erro: {error_type_2}")
+# print(f"\nA Mensagem: {message_2}\nO Tipo de erro: {error_type_2}")
