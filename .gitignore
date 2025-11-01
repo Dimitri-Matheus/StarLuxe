@@ -8,7 +8,7 @@
 
 # Local user configuration file
 settings.json
-build-pyinstaller/
+script/reshade-shaders/
 
 # Created by git when using merge tools for conflicts
 *.BACKUP.*

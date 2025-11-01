@@ -2,12 +2,11 @@
 
 from tkinter import *
 import customtkinter as ctk
-import PIL.Image, PIL.ImageTk
 import logging
 from CTkListbox import *
-# from CTkToolTip import *
 from utils.config import save_config
 from utils.path import resource_path
+from .widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
 
@@ -44,9 +43,10 @@ class PresetsDialog(ctk.CTkToplevel):
         self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
         self.save_button.pack(pady=20)
 
-        #? Como adicionar um Preview do Preset
-        # self.game_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\Galactic.png")), size=(128, 71))
-        # CTkToolTip(listbox, message="", image=self.game_1, corner_radius=8, bg_color="#000001", fg_color="transparent", padding=(1.5, 1.5), alpha=0.95)
+        StyledToolTip(listbox, message=(
+            "Select the ReShade presets you want to download.\n"
+            "You can choose multiple items."
+        ))
 
     def save_preset(self):
         if self.selected_presets:

@@ -1,20 +1,26 @@
 """Utils for all related to Reshade injection logic"""
 
-import os, sys, shutil, subprocess, logging, json, hashlib
+import psutil, shutil, subprocess, logging, json, hashlib, time, configparser
 from pathlib import Path
-# from pymem import Pymem
-# from pymem.process import inject_dll
+from pymem import Pymem
+from pymem.process import inject_dll_from_path
+from utils.path import relative_path
 # from config import load_config
 
 logging.basicConfig(level=logging.INFO)
 
-def resource_path(relative_path: str) -> Path:
-    if getattr(sys, "frozen", False):
-        base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
-    else:
-        base = Path(__file__).parent.parent.resolve()
+def get_filesystem(path: str) -> str:
+    try:
+        drive_path = Path(path).resolve().drive
+        if not drive_path:
+            return "Filesystem Unknown"
 
-    return Path(base) / relative_path
+        for partition in psutil.disk_partitions():
+            if partition.device.startswith(drive_path):
+                return partition.fstype.upper()
+        
+    except Exception as e:
+        logging.warning(f"Error detecting filesystem type: {e}")
 
 
 class ReshadeSetup():
@@ -29,15 +35,14 @@ class ReshadeSetup():
         self.launcher_config = self.settings.get("Launcher", {})
         self.xxmi_enabled = xxmi_enabled
 
-        self.reshade_src = resource_path(self.script_config.get("reshade_file"))
-        self.injector_src = resource_path(self.script_config.get("injector_file"))
-        self.shaders_src = resource_path(self.script_config.get("shaders_dir"))
-        self.reshade_dll = resource_path(self.script_config.get("reshade_dll"))
-        self.reshade_config = resource_path(self.script_config.get("reshade_config"))
-        self.reshade_xr_config = resource_path(self.script_config.get("reshade_xr_config"))
+        self.reshade_src = relative_path(self.script_config.get("reshade_file"))
+        self.shaders_src = relative_path(self.script_config.get("shaders_dir"))
+        self.reshade_dll = relative_path(self.script_config.get("reshade_dll"))
+        self.reshade_config = relative_path(self.script_config.get("reshade_config"))
+        self.reshade_xr_config = relative_path(self.script_config.get("reshade_xr_config"))
 
-        self.xxmi_src = resource_path(self.script_config.get("xxmi_file"))
-        self.download_src = resource_path(self.package_config.get("download_dir"))
+        self.xxmi_src = relative_path(self.script_config.get("xxmi_file"))
+        self.download_src = relative_path(self.package_config.get("download_dir"))
         self.reshade_enabled = self.launcher_config.get("reshade_feature_enabled")
 
     def verify_installation(self):
@@ -71,37 +76,29 @@ class ReshadeSetup():
             "game_code": self.game_code
         }
 
-
     def verify_system(self):
+        validation_items = [
+                ("ReShade.ini", self.reshade_src, "file"),
+                ("Shaders folder", self.shaders_src, "dir"),
+                ("ReShade64.dll", self.reshade_dll, "file"),
+                ("ReShade64.json", self.reshade_config, "file"),
+                ("ReShade64_XR.json", self.reshade_xr_config, "file")
+            ]
+        
+        if self.xxmi_enabled:
+            validation_items.append(("XXMI Launcher Config", self.xxmi_src, "xxmi"))
+
         try:
-            if not self.reshade_src.is_file():
-                logging.error(f"Missing required ReShade.ini: {self.reshade_src}")
-                raise FileNotFoundError("ReShade.ini file not found!")
+            for name, path, item in validation_items:
+                exists = path.is_file() if item != "dir" else path.is_dir()
 
-            if not self.injector_src.is_file():
-                logging.error(f"Missing required Injector.exe: {self.injector_src}")
-                raise FileNotFoundError("Injector executable not found!")
-
-            if not self.shaders_src.is_dir():
-                logging.error(f"Missing required Shaders folder: {self.shaders_src}")
-                raise FileNotFoundError("Shaders folder not found!")
-
-            if not self.reshade_dll.is_file():
-                logging.error(f"Missing required ReShade64.dll: {self.reshade_dll}")
-                raise FileNotFoundError("ReShade64.dll file not found!")
-
-            if not self.reshade_config.is_file():
-                logging.error(f"Missing required ReShade64.json: {self.reshade_config}")
-                raise FileNotFoundError("ReShade64.json file not found!") 
-
-            if not self.reshade_xr_config.is_file():
-                logging.error(f"Missing required ReShade64_XR.json: {self.reshade_xr_config}")
-                raise FileNotFoundError("ReShade64_XR.json file not found!")
-            
-            if self.xxmi_enabled:
-                if not self.xxmi_src.is_file() or self.xxmi_src.name != "XXMI Launcher Config.json":
-                    logging.error(f"Missing or invalid XXMI settings path: {self.xxmi_src}")
-                    raise FileNotFoundError("XXMI Settings not found!")
+                if not exists:
+                    logging.error(f"Missing required {name}: {path}")
+                    raise FileNotFoundError(f"{name} not found!")
+                
+                if item == "xxmi" and path.name != "XXMI Launcher Config.json":
+                    logging.error(f"Invalid XXMI file name: {path.name}")
+                    raise FileNotFoundError("Please select XXMI Launcher Config.json")
 
         except Exception as e:
             return {
@@ -115,50 +112,80 @@ class ReshadeSetup():
             "status": True
         }
 
-    def inject_game(self):
-        link_shader = self.game_dir / self.shaders_src.name
-        if not link_shader.exists():
-            try:
-                logging.info(f"Creating symbolic link: {link_shader} -> {self.shaders_src}")
-                link_shader.symlink_to(self.shaders_src, target_is_directory=True)
-            except Exception:
-                logging.info("Failed to create symbolic link!")
-
-        link_preset = self.game_dir / self.download_src.name
-        if not link_preset.exists():
-            try:
-                logging.info(f"Creating symbolic link: {link_preset} -> {self.download_src}")
-                link_preset.symlink_to(self.download_src, target_is_directory=True)
-            except Exception:
-                logging.info("Failed to create symbolic link!")
+    def inject_game(self, timeout: int = 30):
+        if not all([hasattr(self, 'game_dir'), hasattr(self, 'exe_path')]):
+            raise RuntimeError("Installation check must complete successfully before injection")
         
         ini_dest = self.game_dir / "ReShade.ini"
         if not ini_dest.is_file():
             logging.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
 
-        # Run the Injector.exe
-        logging.info("Injecting ReShade...")
-        cmd_inject = [
-            'powershell',
-            '-Command',
-            'Start-Process',
-            f'-FilePath "{self.injector_src}"',
-            f'-ArgumentList "{self.exe_path.name}"',
-            '-WorkingDirectory', f'"{self.injector_src.parent}"',
-            '-Verb RunAs'
-        ]
-        subprocess.run(cmd_inject, shell=False)
+        try:
+            ini_file = configparser.ConfigParser()
+            ini_file.optionxform = str
+            ini_file.read(ini_dest)
 
-        # Run the game
-        logging.info("Launching the game...")
-        cmd_play = [
-            'powershell',
-            '-Command',
-            f'Start-Process -FilePath "{self.exe_path}" -WorkingDirectory "{self.game_dir}" -Verb RunAs'
-        ]
-        subprocess.run(cmd_play, shell=False)
+            if get_filesystem(str(self.game_dir)) == "NTFS":
+                link_shader = self.game_dir / self.shaders_src.name
+                if not link_shader.exists():
+                    link_shader.symlink_to(self.shaders_src, target_is_directory=True)
+                    logging.info(f"Creating symbolic link: {link_shader} -> {self.shaders_src}")
 
+                link_preset = self.game_dir / self.download_src.name
+                if not link_preset.exists():
+                    link_preset.symlink_to(self.download_src, target_is_directory=True)
+                    logging.info(f"Creating symbolic link: {link_preset} -> {self.download_src}")
+
+            required_keys = ["EffectSearchPaths", "TextureSearchPaths", "PresetPath"]
+            path_flag = False
+            
+            for key in required_keys:
+                value = ini_file.get("GENERAL", key, fallback="")
+                if value.startswith("."):
+                    path_flag = True
+                    break
+
+            if get_filesystem(str(self.game_dir)) != "NTFS" and path_flag:
+                shaders = self.shaders_src / "Shaders"
+                textures = self.shaders_src / "Textures"
+                presets = self.download_src / "ReShadePreset.ini"
+
+                ini_file.set("GENERAL", "EffectSearchPaths", str(shaders.resolve()))
+                ini_file.set("GENERAL", "TextureSearchPaths", str(textures.resolve()))
+                ini_file.set("GENERAL", "PresetPath", str(presets.resolve()))
+
+                with open(ini_dest, "w") as file:
+                    ini_file.write(file)
+
+                logging.info("ReShade.ini configured successfully with absolute paths!")
+
+        except Exception as e:
+            logging.error(f"ReShade.ini configuration failed: {e}")
+            return
+            
+        try:
+            subprocess.Popen([str(self.exe_path)], cwd=str(self.game_dir))
+            logging.info(f"Waiting for {self.exe_path.name} to start...")
+
+            start = time.time()
+            process_name = None
+
+            while time.time() - start < timeout:
+                try:
+                    process_name = Pymem(self.exe_path.name)
+                    break
+                except:
+                    time.sleep(0.5)
+
+            if process_name:
+                inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
+                logging.info(f"{self.reshade_dll.name} injected successfully!")
+            else:
+                raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds")
+
+        except Exception as e:
+            logging.error(f"Injection process failed: {e}")
     
     def xxmi_integration(self, game_code):
         if not self.xxmi_enabled:
@@ -210,10 +237,9 @@ class ReshadeSetup():
 
         return source_hash.hexdigest() != destination_hash.hexdigest()
 
-
     def addon_support(self):
-        standard_folder = resource_path("resources/standard")
-        addon_folder = resource_path("resources/addon")
+        standard_folder = relative_path("resources/standard")
+        addon_folder = relative_path("resources/addon")
 
         if self.reshade_enabled:
             source_file = addon_folder
@@ -224,7 +250,7 @@ class ReshadeSetup():
 
         dll_name = self.reshade_dll.name
         dll_path = source_file / dll_name
-        dll_dest = resource_path("script/") / dll_name
+        dll_dest = relative_path("script/") / dll_name
 
         if not dll_path.is_file():
             logging.warning(f"Source file not found: {dll_path}")
@@ -237,7 +263,7 @@ class ReshadeSetup():
             except Exception as e:
                 logging.error(f"Failed to copy {dll_name}: {e}")
         else:
-            logging.info(f"{dll_name} is already up to date. No action required!")
+            logging.info(f"{dll_name} is already up to date!")
 
 
 #! Test functions
@@ -248,6 +274,7 @@ class ReshadeSetup():
 # setup_reshade.inject_game()
 # setup_reshade.xxmi_integration(game_code)
 # setup_reshade.addon_support()
+# print(get_filesystem("None"))
 
 # message_1 = result_install.get("message", "Tudo certo!")
 # error_type_1 = result_install.get("error_type", "Tudo certo!")

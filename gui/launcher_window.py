@@ -11,6 +11,7 @@ from CTkMenuBar import CustomDropdownMenu
 from utils.config import save_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
+from .widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
 
@@ -43,6 +44,7 @@ class LauncherDialog(ctk.CTkToplevel):
         self.add_button = ctk.CTkButton(self, text="", image=self.add_icon, command=lambda: self.open_modal(None))
         self.add_button.configure(width=0, height=0, fg_color="transparent")
         self.add_button.grid(row=0, column=0, padx=20, pady=10, sticky="nw")
+        StyledToolTip(self.add_button, message="Add New Game")
 
         # Buttons Frame
         self.nav_frame = ctk.CTkFrame(self, fg_color="transparent")
@@ -80,7 +82,6 @@ class LauncherDialog(ctk.CTkToplevel):
             self.pages.append(page)
             page.grid(row=0, column=0, sticky="nsew")
 
-
     # Manager the pages
     def show_page(self, page_index: int):
         if not (0 <= page_index < self.total_pages):
@@ -103,13 +104,11 @@ class LauncherDialog(ctk.CTkToplevel):
         self.controller_pages()
         self.show_page(current_page)
 
-
     def open_modal(self, game_id: str):
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = InputGame(self, self.settings, self.refresh_page, game_edit=game_id)
         else:
             self.modal.focus()
-
 
     def open_game(self, game_code):
         game_data = self.settings["Games"][game_code]
@@ -170,9 +169,9 @@ class GamePage(ctk.CTkFrame):
 
                 launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
                 launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
+                StyledToolTip(launch_button, message="Right-click to manage this item", delay=0.5)
             else:
                 launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
-
 
     def remove_game(self, game_id: str):
         msbox_warning = CTkMessagebox(title="Warning", message="Do you really want to remove this game?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")
@@ -224,10 +223,16 @@ class InputGame(ctk.CTkToplevel):
         self.name_input = ctk.CTkEntry(self, placeholder_text="Enter game name", font=ctk.CTkFont(family="Verdana", size=14))
         self.name_input.configure(width=478, height=38, corner_radius=8)
         self.name_input.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
+        StyledToolTip(self.name_input, message="The name will update automatically after selecting the executable.")
 
         self.icon_button = ctk.CTkButton(self, text="Choose Icon", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_icon())
         self.icon_button.configure(width=123, height=38, corner_radius=8)
         self.icon_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
+        StyledToolTip(self.icon_button, message=(
+            "Select and update the default icon:\n"
+            "1. Choose an image in a compatible format (PNG, JPG, etc.).\n" 
+            "2. Recommended size: 128x128 pixels."
+        ))
 
         self.text_2 = ctk.CTkLabel(self, text="Game Executable", font=ctk.CTkFont(size=18))
         self.text_2.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
@@ -235,6 +240,10 @@ class InputGame(ctk.CTkToplevel):
         self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
         self.path_entry.configure(width=478, height=38, corner_radius=8)
         self.path_entry.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
+        StyledToolTip(self.path_entry, message=(
+            "Path to the folder containing the selected game's executable.\n"
+            "Note: Make sure to select the correct .exe file."
+        ))
 
         self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
         self.browser_button.configure(width=123, height=38, corner_radius=8)
@@ -263,7 +272,6 @@ class InputGame(ctk.CTkToplevel):
             self.path_entry.insert(0, str(Path(game_data.get("folder")) / game_data.get("exe")))
             logging.info("Data loaded successfully!")
 
-
     def select_file(self, path, name):
         filename = filedialog.askopenfilename(parent=self, title="Select Game Executable", initialdir="/", defaultextension=".exe", filetypes=[("Executable files","*.exe"), ("All files", "*.*")])
 
@@ -273,7 +281,6 @@ class InputGame(ctk.CTkToplevel):
             path.insert(0, filename)
             name.delete(0, "end")
             name.insert(0, display_name)
-
 
     def select_icon(self):
         icon_path = filedialog.askopenfilename(parent=self, title="Select Your Icon", initialdir="/", defaultextension=".png", filetypes=[("Image Files", "*.png *.jpg *.jpeg *.ico"), ("PNG files", "*.png"), ("JPEG files", "*.jpg *.jpeg"), ("All files", "*.*")])
@@ -287,7 +294,6 @@ class InputGame(ctk.CTkToplevel):
 
             except Exception as e:
                 logging.error(f"Failed to load selected icon: {e}")
-
 
     def save_game(self):
         game_name = re.sub(r'(?<=[a-z])(?=[A-Z])|[^a-zA-Z]', ' ', self.name_input.get()).replace(' ', '_').strip("_").lower()
@@ -327,16 +333,18 @@ class InputGame(ctk.CTkToplevel):
             "exe": str(game_folder.name),
             "subpath": ""
         }
-
-        #TODO: Refatorar este código
         games = self.settings.setdefault("Games", {})
+
         if not self.game_edit:
             games[game_name] = settings_data
+            logging.info(f"Game added: {game_name}")
         elif game_name == self.game_edit:
             games[game_name].update(settings_data)
+            logging.info(f"Game updated: {game_name}")
         else:
             games[game_name] = games.pop(self.game_edit, {})
             games[game_name].update(settings_data)
+            logging.info(f"Game '{self.game_edit}' was renamed to '{game_name}'")
         
         save_config(self.settings)
         self.callback()

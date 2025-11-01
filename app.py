@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.3'
+# nuitka-project: --product-version='1.4'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='A tool for injecting ReShade'
@@ -32,6 +32,7 @@ from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
 from gui import SettingsDialog, PresetsDialog, LauncherDialog
+from gui.widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
 
@@ -210,13 +211,11 @@ class HomePage(BasePage):
         else:
             self.modal.focus()
 
-
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
             self.modal = SettingsDialog(self, self.settings, controller=self.controller)
         else:
             self.modal.focus()
-
 
     def on_back(self):
         self.controller.show_page(self.previous_page)
@@ -247,7 +246,6 @@ class ReshadePage(BasePage):
 
     def download_preset(self):
         self.button_1.configure(text="Downloading...", state="disabled")
-
         response_args = (
             settings["Account"]["github_name"], 
             settings["Account"]["repository_name"],
@@ -259,7 +257,6 @@ class ReshadePage(BasePage):
             
         threading.Thread(target=download_from_github, args=response_args, daemon=True).start()
         self.after(100, self.check_download)
-
 
     def check_download(self):
         try:
@@ -277,7 +274,6 @@ class ReshadePage(BasePage):
 
         except queue.Empty:
             self.after(100, self.check_download)
-
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
@@ -297,10 +293,12 @@ class ConfigPage(BasePage):
         self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
         self.path_var.trace_add("write", self.update_button)
+        StyledToolTip(self.path_entry, message="Supported games: Genshin Impact, Honkai: Star Rail, Wuthering Waves and Zenless Zone Zero.", delay=0.5)
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
         self.button_2.configure(command=lambda: self.save_path())
+        StyledToolTip(self.button_2, message="Skip this step to set up the game path later.")
         self.update_button()
 
     def update_button(self, *args):
@@ -330,7 +328,6 @@ class ConfigPage(BasePage):
         else:
             msbox_error = CTkMessagebox(title="Error", message=result["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
             msbox_error.title_label.configure(fg_color="gray14")
-
     
     # Function to select the path
     def select_folder(self):
@@ -355,6 +352,7 @@ class SetupPage(BasePage):
         self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/arrow_icon.png")), size=(32, 32))
         self.button_1.configure(image=self.button_icon, width=0, height=0, fg_color="transparent", command=lambda: self.controller.show_page("ConfigPage"))
         self.button_1.grid_configure(pady=(40, 10))
+        StyledToolTip(self.button_1, message="🎉 Thanks for testing! Enjoy your experience!", delay=0.8)
 
         self.button_2.grid_forget()
 

@@ -26,7 +26,6 @@ default = {
     "Script": {
         "shaders_dir": "script/reshade-shaders",
         "reshade_file": "script/ReShade.ini",
-        "injector_file": "script/Injector.exe",
         "reshade_dll": "script/ReShade64.dll",
         "reshade_config": "script/ReShade64.json",
         "reshade_xr_config": "script/ReShade64_XR.json",
