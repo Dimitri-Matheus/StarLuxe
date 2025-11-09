@@ -27,11 +27,11 @@ import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 import logging, threading, queue
 from CTkMessagebox import CTkMessagebox
-from utils.downloader import download_from_github
+from utils.downloader import download_from_github, download_r2_dependencies
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
-from gui import SettingsDialog, PresetsDialog, LauncherDialog
+from gui import SettingsDialog, PresetsDialog, LauncherDialog, DownloadDialog
 from gui.widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
@@ -365,4 +365,12 @@ if __name__ == "__main__":
     logging.info("Settings loaded")
 
     app = Starluxe(settings)
+    setup_system = ReshadeSetup(settings, "", settings["Launcher"]["xxmi_feature_enabled"])
+    result_system = setup_system.verify_system()
+    if not result_system["status"]:
+        def download_task(progress_callback):
+            return download_r2_dependencies(settings["Packages"]["download_dir"], progress_callback)
+
+        DownloadDialog(app, download_task)
+    
     app.mainloop()

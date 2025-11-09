@@ -9,6 +9,7 @@
 # Local user configuration file
 settings.json
 script/reshade-shaders/
+utils/_env.py
 
 # Created by git when using merge tools for conflicts
 *.BACKUP.*

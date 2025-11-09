@@ -9,7 +9,6 @@
     dirs:
       - 'assets'
       - 'theme'
-      - 'script/reshade-shaders'
 
     patterns:
       - 'script/*.*'

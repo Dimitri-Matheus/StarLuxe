@@ -2,3 +2,4 @@
 from .settings_window import SettingsDialog
 from .presets_window import PresetsDialog
 from .launcher_window import LauncherDialog
+from .update_window import DownloadDialog

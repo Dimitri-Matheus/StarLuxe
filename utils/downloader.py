@@ -1,9 +1,11 @@
 """Utils for all related to downloading presets, updates and files"""
 
-import os, requests, logging
+import os, requests, logging, boto3, zipfile
+from botocore.exceptions import ClientError, EndpointConnectionError
 from pathlib import Path
 from utils.path import resource_path
-#from config import load_config
+from utils import _env
+# from config import load_config
 
 logging.basicConfig(level=logging.INFO)
 
@@ -68,8 +70,78 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
     result_queue.put(response)
 
 
-# Test
-"""config = load_config()
+def download_r2_dependencies(directory, progress_callback=None):
+    bucket_name = _env.PRIVATE_BUCKET_NAME
+    key_name = _env.NAME_FILE
+    
+    progress_callback = progress_callback or (lambda x: None) # Use the given callback or an empty function
+
+    validation_items = {
+        ClientError: "Server Connection Failed!",
+        EndpointConnectionError: "No Internet Connection Detected!",
+        zipfile.BadZipFile: "Downloaded File Corrupted!",
+    }
+
+    try:
+        download_dir = Path(directory).parent
+        if not all([_env.KEY_ID_RO, _env.APPLICATION_KEY_PRIVATE_RO]):
+            raise ValueError("R2 credentials not configured!")
+        logging.info(f"Connecting to R2...")
+
+        progress_callback(0.1)
+
+        r2 = boto3.resource(
+            service_name='s3',
+            endpoint_url=_env.ENDPOINT,
+            aws_access_key_id=_env.KEY_ID_RO,
+            aws_secret_access_key=_env.APPLICATION_KEY_PRIVATE_RO
+        )
+
+        file_path = download_dir / key_name
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        logging.info(f"Downloading {key_name}...")
+        progress_callback(0.3)
+
+        r2.Bucket(bucket_name).download_file(key_name, str(file_path))
+        progress_callback(0.7)
+
+        with zipfile.ZipFile(file_path, "r") as zip_ref:
+            zip_ref.extractall(download_dir)
+        logging.info(f"Extracted files to the folder {download_dir}/")
+        progress_callback(0.9)
+
+        file_path.unlink()
+        logging.info(f"Deleted {key_name}")
+        progress_callback(1.0)
+
+        logging.info("All dependencies have been downloaded successfully!")
+        return {
+            "status": True
+        }
+
+    except tuple(validation_items.keys()) as e:
+        error_type = type(e)
+        message = validation_items.get(error_type, str(e))
+        logging.error(f"{error_type.__name__}: {message}")
+        progress_callback(0.0)
+        return {
+            "status": False,
+            "message": message
+        }
+    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        progress_callback(0.0)
+        return {
+            "status": False,
+            "message": "An unexpected error occurred",
+        }
+
+
+#! Test functions
+# config = load_config()
+"""
 download_from_github(
     config['Account']['github_name'],
     config['Account']['repository_name'],
@@ -78,4 +150,5 @@ download_from_github(
     config['Packages'].get('download_dir', '')
 )
 """
-#download_from_github("Dimitri-Matheus", "Snake", "assets/icon", os.getcwd())
+# download_from_github("Dimitri-Matheus", "Snake", "assets/icon", os.getcwd())
+# download_r2_dependencies(config["Packages"]["download_dir"])
