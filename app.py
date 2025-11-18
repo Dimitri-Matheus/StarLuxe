@@ -293,7 +293,7 @@ class ConfigPage(BasePage):
         self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
         self.path_var.trace_add("write", self.update_button)
-        StyledToolTip(self.path_entry, message="Supported games: Genshin Impact, Honkai: Star Rail, Wuthering Waves and Zenless Zone Zero.", delay=0.5)
+        StyledToolTip(self.path_entry, message="Supported games: Genshin Impact, Honkai: Star Rail, Wuthering Waves, Zenless Zone Zero and Duet Night Abyss", delay=0.5)
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 

@@ -55,6 +55,12 @@ default = {
             "folder": "",
             "exe": "ZenlessZoneZero.exe",
             "subpath": ""
+        },
+        "duet_night_abyss": {
+            "icon_path": "assets/icon/DNA.png",
+            "folder": "",
+            "exe": "EM-Win64-Shipping.exe",
+            "subpath": "EM/Binaries/Win64"
         }
     }
 }
