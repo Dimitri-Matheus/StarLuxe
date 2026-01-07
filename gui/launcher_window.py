@@ -169,7 +169,7 @@ class GamePage(ctk.CTkFrame):
 
                 launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
                 launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
-                StyledToolTip(launch_button, message="Right-click to manage this item", delay=0.5)
+                StyledToolTip(launch_button, message="Right-click to manage this item")
             else:
                 launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
 

@@ -1,9 +1,10 @@
 """Utils for all related to downloading presets, updates and files"""
 
-import os, requests, logging, boto3, zipfile
+import os, requests, logging, boto3, zipfile, sys, tempfile, subprocess, json
 from botocore.exceptions import ClientError, EndpointConnectionError
 from pathlib import Path
 from utils.path import resource_path
+from packaging import version
 from utils import _env
 # from config import load_config
 
@@ -18,20 +19,55 @@ def download_file(url, output_path):
     logging.info(f"Downloaded {url} → {output_path}")
 
 
-def download_from_github(repo_owner, repo_name, resource, selected_preset, download_dir, result_queue):
+def sync_metadata(repo_owner, repo_name):
+    remote_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/refs/heads/main/script/Presets/metadata.json"
+    local_metadata = resource_path("script/Presets/metadata.json")
+
+    try:
+        local_data = {}
+        if os.path.exists(local_metadata):
+            try:
+                with open(local_metadata, "r", encoding="utf-8") as file:
+                    local_data = json.load(file)
+            except Exception:
+                local_data = {}
+
+        response = requests.get(remote_url, timeout=3)
+        response.raise_for_status()
+        remote_data = response.json()
+
+        if local_data == remote_data:
+            logging.info("Metadata is already up to date!")
+            return
+
+        download_file(remote_url, local_metadata)
+        logging.info(f"Metadata synchronized successfully!")
+    
+    except Exception as e:
+        logging.warning(f"Sync failed: {e}")
+
+
+def download_from_github(repo_owner, repo_name, resource, selected_preset, download_dir, result_queue, progress_callback=None):
+    progress_callback = progress_callback or (lambda x: None)
+
+    validation_items = {
+        requests.ConnectionError: "Failed to connect to server!",
+        requests.Timeout: "The server took too long to respond.",
+        requests.HTTPError: "Connection error with the server."
+    }
+
     try:
         presets = [p for p in selected_preset if p and p.strip()]
-        if not presets:
-            logging.error("You haven't selected a preset!")
-            raise ValueError("Select a preset before downloading!")
-
         if not download_dir:
             download_dir = resource_path(Path(__file__).parent / resource / "Presets")
         
         download_dir = Path(resource_path(download_dir))
         resource = resource.rstrip("/\\")
+        total_presets = len(presets)
+        progress_callback(0.0)
+        logging.info("Progress: 0.0%")
 
-        for preset_name in selected_preset:
+        for preset_index, preset_name in enumerate(selected_preset):
             remote = f"{resource}/Presets/{preset_name}"
             local = download_dir / preset_name
             local_remote = [(remote, local)]
@@ -44,11 +80,18 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
                 response = requests.get(api_url, headers=headers)
                 response.raise_for_status()
 
-                for item in response.json():
+                items = response.json()
+                file_count = sum(1 for item in items if item["type"] == "file")
+                for file_index, item in enumerate(items):
                     if item["type"] == "file":
                         relative_path = os.path.relpath(item["path"], remote)
                         output_file = local_path / relative_path
                         download_file(item["download_url"], str(output_file))
+                        if progress_callback:
+                            progress = ((preset_index + (file_index + 1) / file_count) / total_presets)
+                            progress_callback(progress)
+                            logging.info(f"Progress: {progress * 100:.1f}%")
+                        
                     elif item["type"] == "dir":
                         local_remote.append((item["path"], local_path))
         
@@ -60,11 +103,25 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
             "message": "Download completed successfully!"
         }
     
-    except Exception as e:
-        logging.error(f"Error during download: {e}")
-        response =  {
+    except tuple(validation_items.keys()) as e:
+        error_type = type(e)
+        message = validation_items.get(error_type, str(e))
+        status_code = getattr(e.response, 'status_code', 'N/A') if hasattr(e, 'response') else 'N/A'
+        reason = getattr(e.response, 'reason', 'N/A') if hasattr(e, 'response') else 'N/A'
+
+        logging.error(f"{error_type.__name__}: {message}, code={status_code}, reason={reason}")
+        progress_callback(0.0)
+        response = {
             "status": False,
-            "message": str(e)
+            "message": message
+        }
+    
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        progress_callback(0.0)
+        response = {
+            "status": False,
+            "message": "An unexpected error occurred"
         }
     
     result_queue.put(response)
@@ -139,6 +196,74 @@ def download_r2_dependencies(directory, progress_callback=None):
         }
 
 
+def check_for_updates(github_owner, current_version, enabled_auto_check_update):
+    remote_url = f"https://api.github.com/repos/{github_owner}/StarLuxe/releases/latest"
+    if not enabled_auto_check_update:
+        logging.info(f"Check update inactive")
+        return {
+            "status": False
+        }
+
+    try:
+        response = requests.get(remote_url)
+        response.raise_for_status()
+        body = response.json()
+        latest_version = None
+
+        version_str = body["tag_name"].strip()
+        if version_str.lower().startswith("v"):
+            latest_version = version_str.lstrip("v").rstrip("-beta")
+
+        if version.parse(latest_version) > version.parse(current_version):
+            for c in range(0, 2):
+                if body["assets"][c]["content_type"] == "application/x-msdownload":
+                    update_url = body["assets"][c]["browser_download_url"]
+                    break
+            logging.info(f"Download URL: {update_url}")
+
+            logging.info("Update version checked!")
+            return {
+                "status": True,
+                "url": update_url,
+                "version": latest_version,
+                "size": body["assets"][c]["size"]
+            }
+
+        else:
+            logging.info("StarLuxe is already up to date!")
+            return {
+                "status": False
+            }
+
+    except Exception as e:
+        logging.error(f"Error checking for updates: {e}")
+        return {
+            "status": False,
+            "message": "Error checking for updates",
+        }
+
+
+def download_update(url):
+    logging.info("Downloading update...")
+
+    temp_dir = tempfile.gettempdir()
+    installer_path = os.path.join(temp_dir, "StarLuxe_Update.exe")
+
+    try:
+        r = requests.get(url, stream=True)
+        with open(installer_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        logging.info("Update downloaded successfully!")
+        subprocess.Popen([installer_path, "/SILENT", "/SP-", "/SUPPRESSMSGBOXES", "/NORESTART"])
+        sys.exit(0)
+
+    except Exception as e:
+        logging.error(f"Error applying update: {e}")
+
+
 #! Test functions
 # config = load_config()
 """
@@ -150,5 +275,6 @@ download_from_github(
     config['Packages'].get('download_dir', '')
 )
 """
-# download_from_github("Dimitri-Matheus", "Snake", "assets/icon", os.getcwd())
 # download_r2_dependencies(config["Packages"]["download_dir"])
+# check_for_updates("Dimitri-Matheus", "1.0.3")
+# sync_metadata(config["Account"]["github_name"], config["Account"]["repository_name"])

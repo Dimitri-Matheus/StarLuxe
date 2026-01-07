@@ -10,10 +10,10 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.4'
+# nuitka-project: --product-version='1.5'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
-# nuitka-project: --file-description='A tool for injecting ReShade'
+# nuitka-project: --file-description='StarLuxe Launcher'
 
 # Data files
 # nuitka-project: --user-package-configuration-file={MAIN_DIRECTORY}/package-files.yml
@@ -27,7 +27,7 @@ import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 import logging, threading, queue
 from CTkMessagebox import CTkMessagebox
-from utils.downloader import download_from_github, download_r2_dependencies
+from utils.downloader import download_from_github, download_r2_dependencies, check_for_updates, download_update, sync_metadata
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
@@ -245,35 +245,33 @@ class ReshadePage(BasePage):
         self.button_2.grid_configure(pady=(10, 20))
 
     def download_preset(self):
-        self.button_1.configure(text="Downloading...", state="disabled")
-        response_args = (
-            settings["Account"]["github_name"], 
-            settings["Account"]["repository_name"],
-            settings["Account"]["preset_folder"],
-            settings["Packages"]["selected"],
-            settings["Packages"].get("download_dir", ""),
-            self.download_queue
-        )
-            
-        threading.Thread(target=download_from_github, args=response_args, daemon=True).start()
-        self.after(100, self.check_download)
+        selected_presets = self.settings["Packages"].get("selected", [])
+        if not selected_presets or not any(preset.strip() for preset in selected_presets):
+            msbox_error = CTkMessagebox(title="Error", message="Select a preset before downloading!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_error.title_label.configure(fg_color="gray14")
+            logging.error("You haven't selected a preset!")
+            return
 
-    def check_download(self):
-        try:
-            response = self.download_queue.get(block=False)
-            if isinstance(response, dict) and response.get("status") is False:
-                msbox_error = CTkMessagebox(title="Error", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-                msbox_error.title_label.configure(fg_color="gray14")
+        def download_task(progress_callback):
+            download_from_github(
+                settings["Account"]["github_name"], 
+                settings["Account"]["repository_name"],
+                settings["Account"]["preset_folder"],
+                settings["Packages"]["selected"],
+                settings["Packages"].get("download_dir", ""),
+                self.download_queue,
+                progress_callback
+            )
+            response = self.download_queue.get()
+            if isinstance(response, dict):
+                self.after(1000, lambda: self.download_result(response))
+            return response
+        DownloadDialog(self.controller, "Downloading Presets", False, download_task)
 
-                self.button_1.configure(text="Download", state="normal")
-            else:
-                msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-                msbox_info.title_label.configure(fg_color="gray14")
-
-                self.button_1.configure(text="Download", state="normal")
-
-        except queue.Empty:
-            self.after(100, self.check_download)
+    def download_result(self, response):
+        if response["status"]:
+            msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300,border_width=0)
+            msbox_info.title_label.configure(fg_color="gray14")
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
@@ -293,7 +291,7 @@ class ConfigPage(BasePage):
         self.path_entry.configure(width=717, height=48, corner_radius=8, textvariable=self.path_var)
         self.path_entry.grid(row=4, column=0, columnspan=2, pady=20)
         self.path_var.trace_add("write", self.update_button)
-        StyledToolTip(self.path_entry, message="Supported games: Genshin Impact, Honkai: Star Rail, Wuthering Waves, Zenless Zone Zero and Duet Night Abyss", delay=0.5)
+        StyledToolTip(self.path_entry, message="Supported games: Genshin Impact, Honkai: Star Rail, Wuthering Waves, Zenless Zone Zero and Duet Night Abyss.")
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
@@ -359,6 +357,7 @@ class SetupPage(BasePage):
 
 if __name__ == "__main__":
     settings = load_config()
+    __version__ = "1.0.5"
 
     #* Load settings before starting the application
     ctk.set_default_color_theme(resource_path(settings["Launcher"]["gui_theme"]))
@@ -367,10 +366,19 @@ if __name__ == "__main__":
     app = Starluxe(settings)
     setup_system = ReshadeSetup(settings, "", settings["Launcher"]["xxmi_feature_enabled"])
     result_system = setup_system.verify_system()
+    result_update = check_for_updates("Dimitri-Matheus", __version__, settings["Launcher"]["auto_check_update"])
+    sync_metadata(settings["Account"]["github_name"], settings["Account"]["repository_name"])
+
     if not result_system["status"]:
         def download_task(progress_callback):
             return download_r2_dependencies(settings["Packages"]["download_dir"], progress_callback)
+        DownloadDialog(app, "Downloading Dependencies", True, download_task)
+    
+    if result_update["status"]:
+        msbox_update = CTkMessagebox(title="New Version!", message=f"Good news! An update is ready. \n\n   Version {result_update['version']} ({result_update['size'] / 1_000_000:.2f} MB)", icon=None, header=False, topmost=True, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Update now", option_2="Later")
+        msbox_update.title_label.configure(fg_color="gray14")
 
-        DownloadDialog(app, download_task)
+        if msbox_update.get() == "Update now":
+            download_update(result_update["url"])
     
     app.mainloop()

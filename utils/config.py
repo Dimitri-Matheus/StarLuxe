@@ -1,6 +1,6 @@
 """Utils for all related to the configuration file"""
 
-import os, json
+import os, json, copy
 import win32security, ntsecuritycon
 from utils.path import resource_path
 
@@ -8,6 +8,7 @@ config_path = resource_path("settings.json")
 
 default = {
     "Launcher": {
+        "auto_check_update": True,
         "gui_theme": "theme/default.json",
         "last_played_game": "",
         "xxmi_feature_enabled": False,
@@ -15,7 +16,6 @@ default = {
     },
     "Packages": {
         "selected": "",
-        "available": ["Luminescence", "AstralAura", "Spectrum", "Galactic", "Legacy"],
         "download_dir": "script/Presets"
     },
     "Account": {
@@ -84,16 +84,57 @@ def grant_user_access(filepath: str):
         print(f"Failed to set permissions for the file {filepath}: {e}")
 
 
+def update_config(base, template):
+    updated = False
+    new_base = {}
+
+    for key, var in template.items():
+        if key not in base:
+            new_base[key] = copy.deepcopy(var)
+            updated = True
+        
+        elif isinstance(var, dict) and isinstance(base[key], dict):
+            sub_dict = base[key] 
+            if update_config(sub_dict, var):
+                updated = True
+            new_base[key] = sub_dict
+            
+        else:
+            new_base[key] = base[key]
+    if list(base.keys()) != list(new_base.keys()):
+        updated = True
+
+    if updated:
+        base.clear()
+        base.update(new_base)
+
+    return updated
+
+
 def load_config() -> dict:
     if not os.path.exists(config_path):
         save_config(default)
         return default.copy()
     try:
         with open(config_path, "r", encoding="utf-8") as file:
-            return json.load(file)
+            user_config = json.load(file)
+            update = update_config(user_config, default)
+            if update:
+                save_config(user_config)
+            return user_config
+        
     except json.JSONDecodeError:
         save_config(default)
         return default.copy()
+    
+
+def load_metadata() -> dict:
+    try:
+        metadata_path = resource_path("script/Presets/metadata.json")
+        with open(metadata_path, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"presets": []}
 
 
 def save_config(config: dict):

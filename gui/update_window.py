@@ -7,10 +7,12 @@ from utils.path import resource_path
 logging.basicConfig(level=logging.INFO)
 
 class DownloadDialog(ctk.CTkToplevel):
-    def __init__(self, master, download_thread=None):
+    def __init__(self, master, message, window_close, download_thread=None):
         super().__init__(master)
         self.transient(master)
         self.download_thread = download_thread
+        self.message = message
+        self.window_close = window_close
 
         self.title("")
         self.resizable(width=False, height=False)
@@ -37,7 +39,7 @@ class DownloadDialog(ctk.CTkToplevel):
         self.download_label = ctk.CTkLabel(self, text="", image=self.download_icon)
         self.download_label.grid(row=1, column=0, pady=(0, 10))
 
-        self.title_label = ctk.CTkLabel(self, text="Downloading Dependencies", font=ctk.CTkFont(size=18))
+        self.title_label = ctk.CTkLabel(self, text=self.message, font=ctk.CTkFont(size=18))
         self.title_label.grid(row=2, column=0, pady=10)
 
         self.progress_bar = ctk.CTkProgressBar(self, orientation="horizontal")
@@ -55,8 +57,11 @@ class DownloadDialog(ctk.CTkToplevel):
         logging.warning("Cannot close window during download!")
 
     def app_close(self):
-        self.destroy()
-        self.master_window.destroy()
+        if self.window_close:
+            self.destroy()
+            self.master_window.destroy()
+        else:
+            self.destroy()
 
     def run_download(self):
         thread = threading.Thread(target=self.execute_download, daemon=True)
@@ -64,7 +69,7 @@ class DownloadDialog(ctk.CTkToplevel):
 
     def execute_download(self):
         try:
-            self.title_label.configure(text="Downloading Dependencies")
+            self.title_label.configure(text=self.message)
             self.button.grid_forget()
             result = self.download_thread(self.update_progress)
 
