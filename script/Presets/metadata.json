@@ -8,7 +8,7 @@
             "author": "Yamilowo",
             "source": "Gamebanana",
             "source_page": "https://gamebanana.com/mods/607194",
-            "permission_proof": "",
+            "permission": "Granted publicly on GameBanana",
             "version": "1.0",
             "description": "Sharpness with cinematic film grain; preserves natural tones.",
             "added_on": "2026-01-04"
@@ -19,7 +19,7 @@
             "author": "Dimit",
             "source": "StarLuxe Bundle",
             "source_page": null,
-            "permission_proof": null,
+            "permission": null,
             "version": "1.0",
             "description": "Bright bloom and HDR highlights for vivid lighting.",
             "added_on": "2024-05-31"
@@ -30,7 +30,7 @@
             "author": "Dimit",
             "source": "StarLuxe Bundle",
             "source_page": null,
-            "permission_proof": null,
+            "permission": null,
             "version": "1.0",
             "description": "Cool tones and high-contrast depth highlighting bioluminescence.",
             "added_on": "2024-05-31"
@@ -41,7 +41,7 @@
             "author": "Rozza12",
             "source": "StarLuxe Bundle",
             "source_page": null,
-            "permission_proof": null,
+            "permission": null,
             "version": "1.0",
             "description": "A collection of experimental ReShade presets for testing and creative tweaking.",
             "added_on": "2024-05-31"
@@ -52,7 +52,7 @@
             "author": "Dimit",
             "source": "StarLuxe Bundle",
             "source_page": null,
-            "permission_proof": null,
+            "permission": null,
             "version": "1.0",
             "description": "Enhances colors and saturation with preserved deep shadows.",
             "added_on": "2024-05-31"
@@ -63,7 +63,7 @@
             "author": "Dimit",
             "source": "StarLuxe Bundle",
             "source_page": null,
-            "permission_proof": null,
+            "permission": null,
             "version": "1.0",
             "description": "Preserves fidelity with balanced contrast and refined sharpness.",
             "added_on": "2025-07-08"
