@@ -8,6 +8,7 @@ from CTkMessagebox import CTkMessagebox
 from utils.config import save_config, delete_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
+from utils.theme import ThemeManager
 from .widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
@@ -66,15 +67,17 @@ class AppFrame(ctk.CTkFrame):
         self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
         self.addon_var = ctk.BooleanVar(value=self.settings["Launcher"]["reshade_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
+        self.theme_var = ctk.StringVar(value=self.settings["Launcher"]["gui_theme"])
 
         # Themes
         self.theme_subtitle = ctk.CTkLabel(self, text="Theme", font=ctk.CTkFont(size=18))
         self.theme_subtitle.grid(row=0, column=0, padx=25, pady=(15, 5), sticky="w")
 
-        self.themes_option = ctk.CTkOptionMenu(self, values=["..."], font=ctk.CTkFont(family="Verdana", size=14), state="disabled")
-        self.themes_option.configure(width=180, height=36)
+        themes = ThemeManager(resource_path("themes"))
+        self.themes_option = ctk.CTkOptionMenu(self, width=180, height=36, font=ctk.CTkFont(family="Verdana", size=14), dropdown_font=ctk.CTkFont(family="Verdana", size=12))
+        self.themes_option.configure(values=themes.get_available_themes(), variable=self.theme_var)
         self.themes_option.grid(row=1, column=0, padx=25, pady=5, sticky="w")
-        StyledToolTip(self.themes_option, message = "✦ Coming soon... ✦")
+        # StyledToolTip(self.themes_option, message = "✦ Coming soon... ✦")
 
         # Integration/Features
         self.integration_subtitle = ctk.CTkLabel(self, text="Integration/Features", font=ctk.CTkFont(size=18))
@@ -124,7 +127,7 @@ class AppFrame(ctk.CTkFrame):
     def switch_toogle_xxmi(self):
         if self.xxmi_var.get():
             self.xxmi_settings.configure(state="normal", fg_color="#515151", border_color="#515151")
-            self.browser_button.configure(state="normal", fg_color="#4b9be5")
+            self.browser_button.configure(state="normal", fg_color=ThemeManager.get_custom_color("accent_color"))
             file_path = self.settings["Script"].get("xxmi_file", "")
             if file_path:
                 self.xxmi_settings.insert(0, file_path)
@@ -179,11 +182,11 @@ class SettingsDialog(ctk.CTkToplevel):
         button_content_frame.grid(row=1, column=0, padx=20, pady=(10, 18), sticky="ew")
 
         self.button_4 = ctk.CTkButton(button_content_frame, text="Save Config", font=ctk.CTkFont(size=18), command=lambda: self.save_path(self.game_content_frame.path_entries))
-        self.button_4.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
+        self.button_4.configure(width=0, height=0, fg_color="transparent", hover_color=ThemeManager.get_custom_color("accent_color"))
         self.button_4.grid(row=0, column=0, sticky="w")
 
         self.button_5 = ctk.CTkButton(button_content_frame, text="Reset Config", font=ctk.CTkFont(size=18), command=lambda: self.reset_config())
-        self.button_5.configure(width=0, height=0, fg_color="transparent", hover_color="#4B9BE5")
+        self.button_5.configure(width=0, height=0, fg_color="transparent", hover_color=ThemeManager.get_custom_color("accent_color"))
         self.button_5.grid(row=0, column=1, padx=15, sticky="w")
 
 
@@ -193,11 +196,17 @@ class SettingsDialog(ctk.CTkToplevel):
         xxmi_enabled = self.app_content_frame.xxmi_var.get()
         reshade_enabled = self.app_content_frame.addon_var.get()
         update_enabled = self.app_content_frame.update_var.get()
+        theme_options = self.app_content_frame.theme_var.get()
         xxmi_config_path = self.app_content_frame.xxmi_settings.get().strip()
 
         self.settings["Script"]["xxmi_file"] = xxmi_config_path
         self.settings["Launcher"]["reshade_feature_enabled"] = reshade_enabled
         self.settings["Launcher"]["auto_check_update"] = update_enabled
+
+        if self.settings["Launcher"]["gui_theme"] != theme_options:
+            self.settings["Launcher"]["gui_theme"] = theme_options
+            msbox_info = CTkMessagebox(title="Info", message="Restart required to apply theme!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_info.title_label.configure(fg_color="gray14")
 
         setup_system = ReshadeSetup(self.settings, "", xxmi_enabled)
         result_system = setup_system.verify_system()
@@ -229,7 +238,7 @@ class SettingsDialog(ctk.CTkToplevel):
             return
         
         save_config(self.settings)
-        self.destroy()
+        self.after(100, self.destroy)
         
     def reset_config(self):
         msbox_warning = CTkMessagebox(title="Warning", message="Restore defaults and restart the app?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")

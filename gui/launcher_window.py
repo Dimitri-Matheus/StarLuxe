@@ -27,9 +27,9 @@ class LauncherDialog(ctk.CTkToplevel):
         self.resizable(width=False, height=False)
         self.grab_set()
 
-        self.prev_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/back_icon.png")), size=(32, 32))
-        self.next_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/next_icon.png")), size=(32, 32))
-        self.add_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/add_icon.png")), size=(32, 32))
+        self.prev_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-left.png")), size=(32, 32))
+        self.next_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-right.png")), size=(32, 32))
+        self.add_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-add.png")), size=(32, 32))
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=0)
@@ -212,7 +212,7 @@ class InputGame(ctk.CTkToplevel):
         self.grid_columnconfigure(1, weight=0)
 
         # Container 1
-        self.icon_image = resource_path("assets/icon/empty.png")
+        self.icon_image = resource_path("assets/icon/placeholder.png")
         self.icon = ctk.CTkImage(PIL.Image.open(self.icon_image), size=(128, 128))
         self.icon_preview = ctk.CTkLabel(self, text="", image=self.icon)
         self.icon_preview.grid(row=r, column=0, columnspan=2, pady=30, sticky="ew"); r += 1
@@ -325,7 +325,7 @@ class InputGame(ctk.CTkToplevel):
             except Exception:
                 logging.exception("Failed to copy new icon!")
         elif self.game_edit:
-            icon_save = self.settings["Games"].get(self.game_edit, {}).get("icon_path", "assets/icon/empty.png")
+            icon_save = self.settings["Games"].get(self.game_edit, {}).get("icon_path", "assets/icon/placeholder.png")
         
         settings_data =  {
             "icon_path": str(icon_save),

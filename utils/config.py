@@ -9,7 +9,7 @@ config_path = resource_path("settings.json")
 default = {
     "Launcher": {
         "auto_check_update": True,
-        "gui_theme": "theme/default.json",
+        "gui_theme": "Default",
         "last_played_game": "",
         "xxmi_feature_enabled": False,
         "reshade_feature_enabled": False
@@ -33,31 +33,31 @@ default = {
     },
     "Games": {
         "genshin_impact": {
-            "icon_path": "assets/icon/GI.png",
+            "icon_path": "assets/games/GI.png",
             "folder": "",
             "exe": "GenshinImpact.exe",
             "subpath": ""
         },
         "honkai_star_rail": {
-            "icon_path": "assets/icon/HSR.png",
+            "icon_path": "assets/games/HSR.png",
             "folder": "",
             "exe": "StarRail.exe",
             "subpath": ""
         },
         "wuthering_waves": {
-            "icon_path": "assets/icon/WuWa.png",
+            "icon_path": "assets/games/WuWa.png",
             "folder": "",
             "exe": "Client-Win64-Shipping.exe",
             "subpath":  "Client/Binaries/Win64"
         },
         "zenless_zone_zero": {
-            "icon_path": "assets/icon/ZZZ.png",
+            "icon_path": "assets/games/ZZZ.png",
             "folder": "",
             "exe": "ZenlessZoneZero.exe",
             "subpath": ""
         },
         "duet_night_abyss": {
-            "icon_path": "assets/icon/DNA.png",
+            "icon_path": "assets/games/DNA.png",
             "folder": "",
             "exe": "EM-Win64-Shipping.exe",
             "subpath": "EM/Binaries/Win64"

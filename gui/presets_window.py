@@ -6,6 +6,7 @@ import logging
 from CTkListbox import *
 from utils.config import save_config, load_metadata
 from utils.path import resource_path
+from utils.theme import ThemeManager
 from .widgets import StyledToolTip
 
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +43,7 @@ class PresetsDialog(ctk.CTkToplevel):
         self.after(100, lambda: self.tooltips_items(listbox))
     
         self.save_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=self.save_preset)
-        self.save_button.configure(width=135, height=44, corner_radius=8, fg_color="#A884F3")
+        self.save_button.configure(width=135, height=44, corner_radius=8, fg_color=ThemeManager.get_custom_color("secondary_color"))
         self.save_button.pack(pady=20)
 
     def tooltips_items(self, listbox):

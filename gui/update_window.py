@@ -31,7 +31,7 @@ class DownloadDialog(ctk.CTkToplevel):
         self.after(10)
         self.geometry(f"400x200+{spawn_x}+{spawn_y}")
 
-        self.download_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/download_icon.png")), size=(32, 32))
+        self.download_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/download.png")), size=(32, 32))
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure((0, 3), weight=1)

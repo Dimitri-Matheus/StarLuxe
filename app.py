@@ -25,12 +25,13 @@ from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
-import logging, threading, queue
+import logging, os, queue
 from CTkMessagebox import CTkMessagebox
 from utils.downloader import download_from_github, download_r2_dependencies, check_for_updates, download_update, sync_metadata
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
+from utils.theme import ThemeManager
 from gui import SettingsDialog, PresetsDialog, LauncherDialog, DownloadDialog
 from gui.widgets import StyledToolTip
 
@@ -73,16 +74,28 @@ class FadeInLabel(ctk.CTkLabel):
 class Image_Frame(ctk.CTkFrame):
     def __init__(self, master):
         super().__init__(master, width=256, height=256)
-        self.char_image_1 = ctk.CTkImage(PIL.Image.open(resource_path("assets/logo/logo.png")), size=(157, 147))
-        #self.char_image_2 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
-        #self.char_image_3 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
-        #self.char_image_4 = ctk.CTkImage(PIL.Image.open(resource_path("assets\\logo/logo.png")), size=(157, 147))
+        self.default_image = ctk.CTkImage(PIL.Image.open(resource_path("themes/Default/MainFrame/logo-app.png")), size=(157, 147))
+        self.custom_size = (256, 256)
 
-        self.image_label = ctk.CTkLabel(master=self, text="", image=self.char_image_1)
+        self.image_label = ctk.CTkLabel(master=self, text="", image=self.default_image)
         self.image_label.place(relx=0.5, rely=0.5, anchor=CENTER)
 
+    def process_image(self, path):
+        if path and os.path.exists(path):
+            try:
+                return ctk.CTkImage(PIL.Image.open(path), size=self.custom_size)
+            except Exception as e:
+                logging.error(f"Failed to load custom image: {e}")
+        return None
+
     def update_image(self, new_image):
-        self.image_label.configure(image=new_image)
+        image = self.process_image(new_image)
+        self.image_label.configure(image=image)
+
+    def load_theme_image(self, theme_name: str):
+        image_path = ThemeManager.get_images(theme_name)
+        if image_path:
+            self.update_image(image_path)
 
 
 class Starluxe(ctk.CTk):
@@ -170,8 +183,8 @@ class HomePage(BasePage):
         super().__init__(parent, controller)
         self.modal = None
         self.previous_page = "ReshadePage"
-        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/back_icon.png")), size=(32, 32))
-        #self.frame.update_image(self.frame.char_image_4)
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-left.png")), size=(32, 32))
+        self.frame.load_theme_image("MainFrame/logo-home")
         self.frame.grid(pady=40)
 
         self.back_button = ctk.CTkButton(self, text="", image=self.button_icon, command=self.on_back)
@@ -186,7 +199,7 @@ class HomePage(BasePage):
         self.button_1.configure(text="Settings", command=lambda: self.open_modal())
         self.button_1.grid_configure(pady=(40, 10))
 
-        self.button_2.configure(text="Start", command=lambda: self.open_modal_start(), fg_color="#1DBD73")
+        self.button_2.configure(text="Start", command=lambda: self.open_modal_start(), fg_color=ThemeManager.get_custom_color("primary_color"))
         self.button_2.grid_configure(pady=(40, 10))
 
     def open_modal_start(self):
@@ -226,7 +239,7 @@ class ReshadePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         self.modal = None
-        #self.frame.update_image(self.frame.char_image_1)
+        self.frame.load_theme_image("MainFrame/logo-preset")
         self.download_queue = queue.Queue()
 
         self.text_1.grid_forget()
@@ -235,20 +248,20 @@ class ReshadePage(BasePage):
         self.text_2.grid_configure(pady=(70, 60))
 
         self.preset_button = ctk.CTkButton(self, text="Preset", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.open_modal())
-        self.preset_button.configure(width=284, height=54, corner_radius=8, fg_color="#A884F3")
+        self.preset_button.configure(width=284, height=54, corner_radius=8, fg_color=ThemeManager.get_custom_color("secondary_color"))
         self.preset_button.grid(row=4, column=0, columnspan=2)
 
         self.button_1.configure(text="Download", command=lambda: self.download_preset())
         self.button_1.grid_configure(pady=(10, 20))
 
-        self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"), fg_color="#1DBD73")
+        self.button_2.configure(text="Next", command=lambda: self.controller.show_page("HomePage"), fg_color=ThemeManager.get_custom_color("primary_color"))
         self.button_2.grid_configure(pady=(10, 20))
 
     def download_preset(self):
         selected_presets = self.settings["Packages"].get("selected", [])
         if not selected_presets or not any(preset.strip() for preset in selected_presets):
-            msbox_error = CTkMessagebox(title="Error", message="Select a preset before downloading!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
+            msbox_warning = CTkMessagebox(title="Warning", message="Select a preset before downloading!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
+            msbox_warning.title_label.configure(fg_color="gray14")
             logging.error("You haven't selected a preset!")
             return
 
@@ -284,7 +297,7 @@ class ReshadePage(BasePage):
 class ConfigPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-        #self.frame.update_image(self.frame.char_image_1)
+        self.frame.load_theme_image("MainFrame/logo-config")
         self.path_var = ctk.StringVar()
 
         self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
@@ -340,14 +353,14 @@ class SetupPage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
         self.text_1.configure(text="Welcome, Trailblazer!")
-        #self.frame.update_image(self.frame.char_image_1)
+        self.frame.load_theme_image("MainFrame/logo-setup")
 
         self.text_1.configure(text="Welcome, Trailblazer!")
         self.text_1.grid_configure(pady=(30, 5))
         self.text_2.configure(text="Enhance your game visuals with the \nReShade")
         self.text_2.grid_configure(pady=(20, 30))
 
-        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/arrow_icon.png")), size=(32, 32))
+        self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-next.png")), size=(32, 32))
         self.button_1.configure(image=self.button_icon, width=0, height=0, fg_color="transparent", command=lambda: self.controller.show_page("ConfigPage"))
         self.button_1.grid_configure(pady=(40, 10))
         StyledToolTip(self.button_1, message="🎉 Thanks for testing! Enjoy your experience!", delay=0.8)
@@ -360,7 +373,8 @@ if __name__ == "__main__":
     __version__ = "1.0.5"
 
     #* Load settings before starting the application
-    ctk.set_default_color_theme(resource_path(settings["Launcher"]["gui_theme"]))
+    themes = ThemeManager(resource_path("themes"))
+    ctk.set_default_color_theme(themes.load_theme(settings["Launcher"]["gui_theme"]))
     logging.info("Settings loaded")
 
     app = Starluxe(settings)
