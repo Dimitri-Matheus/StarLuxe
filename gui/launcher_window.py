@@ -149,7 +149,7 @@ class GamePage(ctk.CTkFrame):
         self.grid_columnconfigure((1, 2, 3), weight=0)
         self.grid_rowconfigure((0, 3), weight=1)
 
-        protected_games = ("genshin_impact", "honkai_star_rail", "wuthering_waves", "zenless_zone_zero", "duet_night_abyss")
+        protected_games = ("genshin_impact", "honkai_star_rail", "wuthering_waves", "zenless_zone_zero", "duet_night_abyss", "arknights_endfield")
         for j, (game_id, game_data) in enumerate(self.page_games, start=1):
             name = game_data.get("display_name", game_id).replace("_", " ").title()
             img_1 = ctk.CTkImage(PIL.Image.open(resource_path(game_data.get("icon_path", ""))), size=(128, 128))

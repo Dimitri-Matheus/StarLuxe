@@ -8,7 +8,7 @@
   data-files:
     dirs:
       - 'assets'
-      - 'theme'
+      - 'themes'
 
     patterns:
       - 'script/*.*'

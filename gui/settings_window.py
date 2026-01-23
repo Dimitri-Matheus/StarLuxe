@@ -23,7 +23,7 @@ class GamePathFrame(ctk.CTkFrame):
         self.grid_columnconfigure(1, weight=0)
 
         game_list = list(self.settings["Games"].items())
-        for i, (game_id, game_data) in enumerate(game_list[:5]):
+        for i, (game_id, game_data) in enumerate(game_list[:6]):
             name = game_data.get("display_name", game_id).replace("_", " ").title()
 
             game_path = ctk.CTkLabel(self, text=f"Path Game - {name}", font=ctk.CTkFont(size=18))

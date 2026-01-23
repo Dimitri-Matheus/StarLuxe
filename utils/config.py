@@ -61,7 +61,13 @@ default = {
             "folder": "",
             "exe": "EM-Win64-Shipping.exe",
             "subpath": "EM/Binaries/Win64"
-        }
+        },
+        "arknights_endfield": {
+            "icon_path": "assets/games/AKE.png",
+            "folder": "",
+            "exe": "Endfield.exe",
+            "subpath": ""
+        },
     }
 }
 
