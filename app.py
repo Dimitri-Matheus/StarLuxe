@@ -371,7 +371,7 @@ class SetupPage(BasePage):
 
 if __name__ == "__main__":
     settings = load_config()
-    __version__ = "1.0.5"
+    __version__ = "1.0.6"
 
     #* Load settings before starting the application
     themes = ThemeManager(resource_path("themes"))

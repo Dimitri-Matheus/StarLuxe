@@ -77,7 +77,14 @@ class AppFrame(ctk.CTkFrame):
         self.themes_option = ctk.CTkOptionMenu(self, width=180, height=36, font=ctk.CTkFont(family="Verdana", size=14), dropdown_font=ctk.CTkFont(family="Verdana", size=12))
         self.themes_option.configure(values=themes.get_available_themes(), variable=self.theme_var)
         self.themes_option.grid(row=1, column=0, padx=25, pady=5, sticky="w")
-        # StyledToolTip(self.themes_option, message = "✦ Coming soon... ✦")
+        StyledToolTip(self.themes_option, message=(
+            "How to create a custom theme:\n"
+            "1. Click the 'Open Folder' button to open the 'themes' folder.\n"
+            "2. Duplicate the 'Default' folder\n"
+            "3. Rename the copied folder and the 'default.json' file so they appear in the theme list.\n"
+            "4. Edit and replace images as needed. (Supported image: .png, .jpg, .jpeg).\n"
+            "Save your changes and restart the app to apply them."
+        ))
 
         # Integration/Features
         self.integration_subtitle = ctk.CTkLabel(self, text="Integration/Features", font=ctk.CTkFont(size=18))
@@ -189,6 +196,9 @@ class SettingsDialog(ctk.CTkToplevel):
         self.button_5.configure(width=0, height=0, fg_color="transparent", hover_color=ThemeManager.get_custom_color("accent_color"))
         self.button_5.grid(row=0, column=1, padx=15, sticky="w")
 
+        self.button_6 = ctk.CTkButton(button_content_frame, text="Open Folder", font=ctk.CTkFont(size=18), command=lambda: self.open_install_folder())
+        self.button_6.configure(width=0, height=0, fg_color="transparent", hover_color=ThemeManager.get_custom_color("accent_color"))
+        self.button_6.grid(row=0, column=2,  sticky="w")
 
     def save_path(self, path_entries: dict[str, ctk.CTkEntry]):
         errors = []
@@ -239,6 +249,13 @@ class SettingsDialog(ctk.CTkToplevel):
         
         save_config(self.settings)
         self.after(100, self.destroy)
+
+    def open_install_folder(self):
+        install_path = resource_path("")
+        if os.path.exists(install_path):
+            os.startfile(install_path)
+        else:
+            logging.warning(f"Install forder not found! {install_path}")
         
     def reset_config(self):
         msbox_warning = CTkMessagebox(title="Warning", message="Restore defaults and restart the app?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")
