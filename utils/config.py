@@ -12,6 +12,7 @@ default = {
         "gui_theme": "Default",
         "last_played_game": "",
         "xxmi_feature_enabled": False,
+        "direct_feature_enabled": False,
         "reshade_feature_enabled": False
     },
     "Packages": {
@@ -21,12 +22,13 @@ default = {
     "Account": {
         "github_name": "Dimitri-Matheus",
         "preset_folder": "script/",
-        "repository_name": "HSR-Script"
+        "repository_name": "StarLuxe"
     },
     "Script": {
         "shaders_dir": "script/reshade-shaders",
         "reshade_file": "script/ReShade.ini",
         "reshade_dll": "script/ReShade64.dll",
+        "reshade_dxvk": "script/dxgi.dll",
         "reshade_config": "script/ReShade64.json",
         "reshade_xr_config": "script/ReShade64_XR.json",
         "xxmi_file": ""

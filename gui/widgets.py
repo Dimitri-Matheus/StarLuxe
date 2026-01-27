@@ -2,6 +2,7 @@
 
 import customtkinter as ctk
 from CTkToolTip import CTkToolTip
+from CTkMessagebox import CTkMessagebox
 
 class StyledToolTip(CTkToolTip):
     def __init__(self, widget, message, **kwargs):
@@ -20,3 +21,29 @@ class StyledToolTip(CTkToolTip):
 
         default_style.update(kwargs)
         super().__init__(widget, message=message, **default_style)
+
+
+# Popups
+class StyledPopup(CTkMessagebox):
+    def __init__(self, **kwargs):
+        default_style = {
+            "title": "Info",
+            "icon": None,
+            "header": False,
+            "sound": True,
+            "font": ctk.CTkFont(family="Verdana", size=14),
+            "fg_color": "gray14",
+            "bg_color": "gray14",
+            "justify": "center",
+            "wraplength": 300,
+            "border_width": 0,
+        }
+
+        default_style.update(kwargs)
+        super().__init__(**default_style)
+
+        try:
+            if hasattr(self, "title_label") and self.title_label:
+                self.title_label.configure(fg_color=default_style["fg_color"])
+        except Exception:
+            pass

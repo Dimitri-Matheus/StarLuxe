@@ -26,14 +26,13 @@ from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 import logging, os, queue
-from CTkMessagebox import CTkMessagebox
 from utils.downloader import download_from_github, download_r2_dependencies, check_for_updates, download_update, sync_metadata
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
 from utils.theme import ThemeManager
 from gui import SettingsDialog, PresetsDialog, LauncherDialog, DownloadDialog
-from gui.widgets import StyledToolTip
+from gui.widgets import StyledToolTip, StyledPopup
 
 logging.basicConfig(level=logging.INFO)
 
@@ -208,10 +207,9 @@ class HomePage(BasePage):
         folder = game_data.get("folder", "").strip()
 
         if last_game and folder:
-            msbox_question = CTkMessagebox(title="Quick Launch", message=f"Do you want to start {last_game.replace("_", " ").title()}?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Yes", option_2="No")
-            msbox_question.title_label.configure(fg_color="gray14")
+            msbox_launch = StyledPopup(title="Quick Launch", message=f"Do you want to start {last_game.replace('_', ' ').title()}?", option_1="Yes", option_2="No")
 
-            if msbox_question.get() == "Yes":
+            if msbox_launch.get() == "Yes":
                 setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
                 setup.verify_installation()
                 setup.addon_support()
@@ -260,9 +258,8 @@ class ReshadePage(BasePage):
     def download_preset(self):
         selected_presets = self.settings["Packages"].get("selected", [])
         if not selected_presets or not any(preset.strip() for preset in selected_presets):
-            msbox_warning = CTkMessagebox(title="Warning", message="Select a preset before downloading!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_warning.title_label.configure(fg_color="gray14")
-            logging.error("You haven't selected a preset!")
+            StyledPopup(title="Warning", message="Select a preset before downloading!")
+            logging.warning("You haven't selected a preset!")
             return
 
         def download_task(progress_callback):
@@ -283,8 +280,7 @@ class ReshadePage(BasePage):
 
     def download_result(self, response):
         if response["status"]:
-            msbox_info = CTkMessagebox(title="Info", message=response["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300,border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
+            StyledPopup(message=response["message"])
 
     def open_modal(self):
         if self.modal is None or not self.modal.winfo_exists():
@@ -338,8 +334,7 @@ class ConfigPage(BasePage):
             save_config(self.settings)
             self.controller.show_page("ReshadePage")
         else:
-            msbox_error = CTkMessagebox(title="Error", message=result["message"], icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
+            StyledPopup(title="Error", message=result["message"])
     
     # Function to select the path
     def select_folder(self):
@@ -384,16 +379,19 @@ if __name__ == "__main__":
     result_update = check_for_updates("Dimitri-Matheus", __version__, settings["Launcher"]["auto_check_update"])
     sync_metadata(settings["Account"]["github_name"], settings["Account"]["repository_name"])
 
-    if not result_system["status"]:
+    if result_update["status"]:
+        msbox_update = StyledPopup(title="New Version!", message=(
+            "Good news! An update is ready. \n\n   "
+            f"Version {result_update['version']} ({result_update['size'] / 1_000_000:.2f} MB)"
+        ), topmost=True, option_1="Update now", option_2="Later",)
+        
+        if msbox_update.get() == "Update now":
+            download_update(result_update["url"])
+
+    #! Hard‑Coded
+    if not result_system["status"] and result_system["message"].strip().lower().count("shaders folder not found!") == 1:
         def download_task(progress_callback):
             return download_r2_dependencies(settings["Packages"]["download_dir"], progress_callback)
         DownloadDialog(app, "Downloading Dependencies", True, download_task)
-    
-    if result_update["status"]:
-        msbox_update = CTkMessagebox(title="New Version!", message=f"Good news! An update is ready. \n\n   Version {result_update['version']} ({result_update['size'] / 1_000_000:.2f} MB)", icon=None, header=False, topmost=True, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Update now", option_2="Later")
-        msbox_update.title_label.configure(fg_color="gray14")
-
-        if msbox_update.get() == "Update now":
-            download_update(result_update["url"])
     
     app.mainloop()

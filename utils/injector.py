@@ -38,12 +38,14 @@ class ReshadeSetup():
         self.reshade_src = relative_path(self.script_config.get("reshade_file"))
         self.shaders_src = relative_path(self.script_config.get("shaders_dir"))
         self.reshade_dll = relative_path(self.script_config.get("reshade_dll"))
+        self.reshade_dxvk = relative_path(self.script_config.get("reshade_dxvk"))
         self.reshade_config = relative_path(self.script_config.get("reshade_config"))
         self.reshade_xr_config = relative_path(self.script_config.get("reshade_xr_config"))
 
         self.xxmi_src = relative_path(self.script_config.get("xxmi_file"))
         self.download_src = relative_path(self.package_config.get("download_dir"))
         self.reshade_enabled = self.launcher_config.get("reshade_feature_enabled")
+        self.direct_enabled = self.launcher_config.get("direct_feature_enabled")
 
     def verify_installation(self):
         try:
@@ -165,7 +167,11 @@ class ReshadeSetup():
             return
             
         try:
-            subprocess.Popen([str(self.exe_path)], cwd=str(self.game_dir))
+            args = [str(self.exe_path)]
+            if self.direct_enabled:
+                args.append("-force-d3d11")
+
+            subprocess.Popen(args, cwd=str(self.game_dir))
             logging.info(f"Waiting for {self.exe_path.name} to start...")
 
             start = time.time()
@@ -179,8 +185,12 @@ class ReshadeSetup():
                     time.sleep(0.5)
 
             if process_name:
-                inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
-                logging.info(f"{self.reshade_dll.name} injected successfully!")
+                if self.direct_enabled:
+                    inject_dll_from_path(process_name.process_handle, str(self.reshade_dxvk))
+                    logging.info(f"{self.reshade_dxvk.name} injected successfully!")
+                else:
+                    inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
+                    logging.info(f"{self.reshade_dll.name} injected successfully!")
             else:
                 raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds")
 
@@ -236,6 +246,17 @@ class ReshadeSetup():
                 destination_hash.update(chunk)
 
         return source_hash.hexdigest() != destination_hash.hexdigest()
+    
+    def dxvk_support(self):
+        if self.direct_enabled and not self.reshade_dxvk.is_file():
+            try:
+                shutil.copy2(self.reshade_dll, self.reshade_dxvk)
+                logging.info(f"File {self.reshade_dxvk.name} created successfully!")
+            except Exception as e:
+                logging.error(f"Failed to copy: {e}")
+                return
+        else:
+            logging.info(f"DirectX inactive")
 
     def addon_support(self):
         standard_folder = relative_path("resources/standard")
@@ -268,12 +289,13 @@ class ReshadeSetup():
 
 #! Test functions
 # config = load_config()
-# setup_reshade = ReshadeSetup(config, "D:/Games/ZenlessZoneZero Game", False)
+# setup_reshade = ReshadeSetup(config, "C:/Games/EndField Game", False)
 # result_install = setup_reshade.verify_installation()
 # result_system = setup_reshade.verify_system()
 # setup_reshade.inject_game()
 # setup_reshade.xxmi_integration(game_code)
 # setup_reshade.addon_support()
+# setup_reshade.dxvk_support()
 # print(get_filesystem("None"))
 
 # message_1 = result_install.get("message", "Tudo certo!")

@@ -4,12 +4,11 @@ from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
 import os, sys, logging
-from CTkMessagebox import CTkMessagebox
 from utils.config import save_config, delete_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
 from utils.theme import ThemeManager
-from .widgets import StyledToolTip
+from .widgets import StyledToolTip, StyledPopup
 
 logging.basicConfig(level=logging.INFO)
 
@@ -66,6 +65,7 @@ class AppFrame(ctk.CTkFrame):
         self.xxmi_var = ctk.BooleanVar(value=self.settings["Launcher"]["xxmi_feature_enabled"])
         self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
         self.addon_var = ctk.BooleanVar(value=self.settings["Launcher"]["reshade_feature_enabled"])
+        self.dxvk_var = ctk.BooleanVar(value=self.settings["Launcher"]["direct_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
         self.theme_var = ctk.StringVar(value=self.settings["Launcher"]["gui_theme"])
 
@@ -99,9 +99,18 @@ class AppFrame(ctk.CTkFrame):
             "Requires the path to be set below."
         ))
 
+        self.switch_dxvk = ctk.CTkSwitch(self, text="DirectX", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
+        self.switch_dxvk.configure(switch_width=36, switch_height=20, variable=self.dxvk_var)
+        self.switch_dxvk.grid(row=4, column=0, padx=25, pady=(10, 5), sticky="w")
+        StyledToolTip(self.switch_dxvk, message = (
+            "Enabled: Start the game using the DirectX 11 graphics API.\n"
+            "Disabled: Start the game using the default graphics API.\n"
+            "The game may crash when enabled!"
+        ))
+
         self.switch_addon = ctk.CTkSwitch(self, text="Reshade+", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_addon.configure(switch_width=36, switch_height=20, variable=self.addon_var)
-        self.switch_addon.grid(row=4, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_addon.grid(row=5, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_addon, message = (
             "Enabled: Switches to the enhanced ReShade build with Addon support.\n"
             "Disabled: Keeps the regular ReShade version active."
@@ -109,7 +118,7 @@ class AppFrame(ctk.CTkFrame):
 
         self.switch_update = ctk.CTkSwitch(self, text="Check for updates", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_update.configure(switch_width=36, switch_height=20, variable=self.update_var)
-        self.switch_update.grid(row=5, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_update.grid(row=6, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_update, message = (
             "Enabled: The app will automatically check for updates at startup.\n"
             "Disabled: The app will not check for updates automatically.\n"
@@ -118,16 +127,16 @@ class AppFrame(ctk.CTkFrame):
 
         # XXMI Path
         self.config_file = ctk.CTkLabel(self, text="Configuration File", font=ctk.CTkFont(size=18))
-        self.config_file.grid(row=6, column=0, padx=25, pady=(15, 5), sticky="w")
+        self.config_file.grid(row=7, column=0, padx=25, pady=(15, 5), sticky="w")
 
         self.xxmi_settings = ctk.CTkEntry(self, placeholder_text="C:/Path/to/XXMI Launcher Config.json", font=ctk.CTkFont(family="Verdana", size=14))
         self.xxmi_settings.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
-        self.xxmi_settings.grid(row=7, column=0, padx=25, pady=5, sticky="w")
+        self.xxmi_settings.grid(row=8, column=0, padx=25, pady=5, sticky="w")
         StyledToolTip(self.xxmi_settings, message = "Usually located in the \"XXMI Launcher folder\" or \"AppData\\Roaming\\XXMI Launcher\".")
 
         self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.xxmi_settings))
         self.browser_button.configure(width=123, height=38, corner_radius=8, state="disabled", fg_color="#222222")
-        self.browser_button.grid(row=7, column=1, padx=(0, 20), pady=5, sticky="w")
+        self.browser_button.grid(row=8, column=1, padx=(0, 20), pady=5, sticky="w")
 
         self.switch_toogle_xxmi()
 
@@ -205,6 +214,7 @@ class SettingsDialog(ctk.CTkToplevel):
 
         xxmi_enabled = self.app_content_frame.xxmi_var.get()
         reshade_enabled = self.app_content_frame.addon_var.get()
+        direct_enabled = self.app_content_frame.dxvk_var.get()
         update_enabled = self.app_content_frame.update_var.get()
         theme_options = self.app_content_frame.theme_var.get()
         xxmi_config_path = self.app_content_frame.xxmi_settings.get().strip()
@@ -212,11 +222,11 @@ class SettingsDialog(ctk.CTkToplevel):
         self.settings["Script"]["xxmi_file"] = xxmi_config_path
         self.settings["Launcher"]["reshade_feature_enabled"] = reshade_enabled
         self.settings["Launcher"]["auto_check_update"] = update_enabled
+        self.settings["Launcher"]["direct_feature_enabled"] = direct_enabled
 
         if self.settings["Launcher"]["gui_theme"] != theme_options:
             self.settings["Launcher"]["gui_theme"] = theme_options
-            msbox_info = CTkMessagebox(title="Info", message="Restart required to apply theme!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
+            StyledPopup(message="Restart required to apply theme!")
 
         setup_system = ReshadeSetup(self.settings, "", xxmi_enabled)
         result_system = setup_system.verify_system()
@@ -243,8 +253,7 @@ class SettingsDialog(ctk.CTkToplevel):
     
         errors = list(dict.fromkeys(errors))
         if errors:
-            msbox_error = CTkMessagebox(title="Error", message="\n".join(errors), icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
+            StyledPopup(title="Error", message="\n".join(errors))
             return
         
         save_config(self.settings)
@@ -258,10 +267,9 @@ class SettingsDialog(ctk.CTkToplevel):
             logging.warning(f"Install forder not found! {install_path}")
         
     def reset_config(self):
-        msbox_warning = CTkMessagebox(title="Warning", message="Restore defaults and restart the app?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")
-        msbox_warning.title_label.configure(fg_color="gray14")
+        msbox_restore = StyledPopup(title="Warning", message="Restore defaults and restart the app?", option_1="Ok", option_2="Cancel")
 
-        if msbox_warning.get() == "Ok":
+        if msbox_restore.get() == "Ok":
             delete_config()
             logging.info("Settings have been restored to default!")
             try:

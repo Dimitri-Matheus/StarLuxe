@@ -6,12 +6,11 @@ import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 from pathlib import Path
 import logging, re, math, shutil
-from CTkMessagebox import CTkMessagebox
 from CTkMenuBar import CustomDropdownMenu
 from utils.config import save_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
-from .widgets import StyledToolTip
+from .widgets import StyledToolTip, StyledPopup
 
 logging.basicConfig(level=logging.INFO)
 
@@ -115,8 +114,7 @@ class LauncherDialog(ctk.CTkToplevel):
         folder = game_data.get("folder", "").strip()
 
         if not folder:
-            msbox_error = CTkMessagebox(title="Info", message="Please set the game folder first in Settings", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_error.title_label.configure(fg_color="gray14")
+            StyledPopup(message="Please set the game folder first in Settings")
             return
 
         self.settings["Launcher"]["last_played_game"] = game_code
@@ -125,6 +123,7 @@ class LauncherDialog(ctk.CTkToplevel):
         setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
         setup.verify_installation()
         setup.addon_support()
+        setup.dxvk_support()
         setup.xxmi_integration(game_code)
         setup.inject_game()
         self.destroy()
@@ -149,7 +148,6 @@ class GamePage(ctk.CTkFrame):
         self.grid_columnconfigure((1, 2, 3), weight=0)
         self.grid_rowconfigure((0, 3), weight=1)
 
-        protected_games = ("genshin_impact", "honkai_star_rail", "wuthering_waves", "zenless_zone_zero", "duet_night_abyss", "arknights_endfield")
         for j, (game_id, game_data) in enumerate(self.page_games, start=1):
             name = game_data.get("display_name", game_id).replace("_", " ").title()
             img_1 = ctk.CTkImage(PIL.Image.open(resource_path(game_data.get("icon_path", ""))), size=(128, 128))
@@ -161,22 +159,25 @@ class GamePage(ctk.CTkFrame):
             text = ctk.CTkLabel(self, text=f"{name}", font=ctk.CTkFont(size=20))
             text.grid(row=2, column=j, pady=(10, 0), sticky="n")
 
-            if game_id not in protected_games:
-                context_menu = CustomDropdownMenu(master=self.controller, widget=launch_button, font=ctk.CTkFont(family="Verdana",size=12))
-                context_menu.configure(border_color="gray20", border_width=1)
-                context_menu.add_option("Edit", command=lambda gid=game_id: self.controller.open_modal(gid))
-                context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
+            context_menu = CustomDropdownMenu(master=self.controller, widget=launch_button, font=ctk.CTkFont(family="Verdana",size=12))
+            context_menu.configure(border_color="gray20", border_width=1)
 
-                launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
-                launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
-                StyledToolTip(launch_button, message="Right-click to manage this item")
-            else:
-                launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
+            
+            context_menu.add_option("Edit", command=lambda gid=game_id: self.controller.open_modal(gid))
+            context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
+            context_menu.add_separator()
+            context_menu.add_option("Uninstall ReShade", command=lambda gid=game_id: self.remove_reshade(gid))
+            # Change to in this "Manage ReShade"
+
+            launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
+            launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
+            StyledToolTip(launch_button, message="Right-click to manage this item")
+            #else:
+                #launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
 
     def remove_game(self, game_id: str):
-        msbox_warning = CTkMessagebox(title="Warning", message="Do you really want to remove this game?", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0, option_1="Ok", option_2="Cancel")
-        msbox_warning.title_label.configure(fg_color="gray14")
-        if msbox_warning.get() != "Ok":
+        msbox_remove = StyledPopup(title="Warning", message="Do you really want to remove this game?", option_1="Ok", option_2="Cancel")
+        if msbox_remove.get() != "Ok":
             return
         path = self.controller.settings["Games"][game_id].get("icon_path")
         full_path = Path(resource_path(path)).resolve()
@@ -191,6 +192,42 @@ class GamePage(ctk.CTkFrame):
         save_config(self.controller.settings)
         self.controller.refresh_page()
         logging.info(f"Game '{game_id}' removed from configuration!")
+
+    def remove_reshade(self, game_id: str):
+        game_data = self.controller.settings["Games"][game_id]
+        folder = game_data.get("folder", "").strip()
+
+        if not folder:
+            StyledPopup(message="Please set the game folder first in Settings")
+            return
+
+        msbox_remove_reshade = StyledPopup(title="Warning", message="Uninstall ReShade from this game?", option_1="Ok", option_2="Cancel")
+        if msbox_remove_reshade.get() != "Ok":
+            return
+        
+        files = ["ReShade.ini", "ReShade.log", "reshade-shaders", "Presets"]
+        removed = []
+        for item in files:
+            object_path = Path(folder) / item
+            if object_path.exists():
+                try:
+                    if object_path.is_symlink:
+                        object_path.unlink()
+                    elif object_path.is_dir():
+                        shutil.rmtree(object_path)
+                    elif object_path.is_file():
+                        object_path.unlink()
+                    removed.append(object_path.name)
+                except Exception as e:
+                    logging.error(f"Failed to remove: {e}")
+            else:
+                logging.info(f"{item} not found in the game folder")
+        
+        if not removed:
+            StyledPopup(message="ReShade is not installed in this game!")
+        else:
+            logging.info(f"Removed {removed} files from the game folder!")
+            StyledPopup(message="ReShade uninstallation completed!")
 
 
 class InputGame(ctk.CTkToplevel):
@@ -301,13 +338,11 @@ class InputGame(ctk.CTkToplevel):
         game_folder = Path(game_base)
 
         if any([not game_base, not game_name, not game_folder.is_file(), game_folder.suffix.lower() != ".exe"]):
-            msbox_info = CTkMessagebox(title="Info", message="Please fill in all required fields", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
+            StyledPopup(message="Please fill in all required fields")
             return
         
         if game_name in self.settings["Games"] and game_name != self.game_edit:
-            msbox_info = CTkMessagebox(title="Info", message="Game name already exists!", icon=None, header=False, sound=True, font=ctk.CTkFont(family="Verdana", size=14), fg_color="gray14", bg_color="gray14", justify="center", wraplength=300, border_width=0)
-            msbox_info.title_label.configure(fg_color="gray14")
+            StyledPopup(message="Game name already exists!")
             return
         
         # Copy icons
