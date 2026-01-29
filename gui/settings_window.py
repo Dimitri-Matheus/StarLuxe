@@ -113,7 +113,8 @@ class AppFrame(ctk.CTkFrame):
         self.switch_addon.grid(row=5, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_addon, message = (
             "Enabled: Switches to the enhanced ReShade build with Addon support.\n"
-            "Disabled: Keeps the regular ReShade version active."
+            "Disabled: Keeps the regular ReShade version active.\n"
+            "Do not recommend using addons in online games!"
         ))
 
         self.switch_update = ctk.CTkSwitch(self, text="Check for updates", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)

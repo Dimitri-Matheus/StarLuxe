@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError, EndpointConnectionError
 from pathlib import Path
 from utils.path import resource_path
 from packaging import version
+from win32api import GetFileVersionInfo, LOWORD, HIWORD
 from utils import _env
 # from config import load_config
 
@@ -17,6 +18,23 @@ def download_file(url, output_path):
     with open(output_path, 'wb') as f:
         f.write(response.content)
     logging.info(f"Downloaded {url} → {output_path}")
+
+
+def get_version(size=4):
+    if "__compiled__" in globals() or getattr(sys, "frozen", False):
+        exe = Path(sys.argv[0]).resolve()
+        logging.debug(f"Path: {exe}")
+        try:
+            info_parse = GetFileVersionInfo(str(exe), "\\")
+            ms_file = info_parse["FileVersionMS"]
+            ls_file = info_parse["FileVersionLS"]
+            version = [str(HIWORD(ms_file)), str(LOWORD(ms_file)),
+            str(HIWORD(ls_file)), str(LOWORD(ls_file))]
+            return ".".join(version[:size])
+        except Exception as e:
+            logging.error(f"Failed to read version: {e}")
+    else:
+        return "0.0.0"
 
 
 def sync_metadata(repo_owner, repo_name):
@@ -196,7 +214,8 @@ def download_r2_dependencies(directory, progress_callback=None):
         }
 
 
-def check_for_updates(github_owner, current_version, enabled_auto_check_update):
+def check_for_updates(github_owner, enabled_auto_check_update):
+    current_version = get_version(size=3)
     remote_url = f"https://api.github.com/repos/{github_owner}/StarLuxe/releases/latest"
     if not enabled_auto_check_update:
         logging.info(f"Check update inactive")

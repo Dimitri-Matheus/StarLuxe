@@ -22,6 +22,14 @@ class StyledToolTip(CTkToolTip):
         default_style.update(kwargs)
         super().__init__(widget, message=message, **default_style)
 
+    def show(self):
+        if self.widget.winfo_exists() and self.winfo_exists():
+            super().show()
+
+    def deiconify(self):
+        if self.winfo_exists():
+            super().deiconify()
+
 
 # Popups
 class StyledPopup(CTkMessagebox):

@@ -164,7 +164,9 @@ class ReshadeSetup():
 
         except Exception as e:
             logging.error(f"ReShade.ini configuration failed: {e}")
-            return
+            return {
+                "message": "Failed to configure ReShade!",
+            }
             
         try:
             args = [str(self.exe_path)]
@@ -191,11 +193,17 @@ class ReshadeSetup():
                 else:
                     inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
                     logging.info(f"{self.reshade_dll.name} injected successfully!")
+                return {
+                    "message": None
+                }
             else:
-                raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds")
+                raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds...")
 
         except Exception as e:
             logging.error(f"Injection process failed: {e}")
+            return {
+                "message": "ReShade Injection failed!",
+            }
     
     def xxmi_integration(self, game_code):
         if not self.xxmi_enabled:

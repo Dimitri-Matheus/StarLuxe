@@ -125,8 +125,12 @@ class LauncherDialog(ctk.CTkToplevel):
         setup.addon_support()
         setup.dxvk_support()
         setup.xxmi_integration(game_code)
-        setup.inject_game()
+
+        result = setup.inject_game()
         self.destroy()
+        if result["message"] != None:
+            StyledPopup(title="Error", message=result["message"])
+            return
 
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
@@ -167,7 +171,7 @@ class GamePage(ctk.CTkFrame):
             context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
             context_menu.add_separator()
             context_menu.add_option("Uninstall ReShade", command=lambda gid=game_id: self.remove_reshade(gid))
-            # Change to in this "Manage ReShade"
+            # Change to "Manage ReShade"
 
             launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
             launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))

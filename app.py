@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.6'
+# nuitka-project: --product-version='1.0.7'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -71,30 +71,34 @@ class FadeInLabel(ctk.CTkLabel):
 
 
 class Image_Frame(ctk.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, theme_name: str):
         super().__init__(master, width=256, height=256)
-        self.default_image = ctk.CTkImage(PIL.Image.open(resource_path("themes/Default/MainFrame/logo-app.png")), size=(157, 147))
-        self.custom_size = (256, 256)
+        self.current_theme = theme_name
+        self.default_image = ctk.CTkImage(PIL.Image.open(resource_path("themes/Default/MainFrame/logo-app.png")), size=ThemeManager.get_image_size("Default"))
 
         self.image_label = ctk.CTkLabel(master=self, text="", image=self.default_image)
         self.image_label.place(relx=0.5, rely=0.5, anchor=CENTER)
 
-    def process_image(self, path):
+    def process_image(self, path, size: tuple = None):
         if path and os.path.exists(path):
             try:
-                return ctk.CTkImage(PIL.Image.open(path), size=self.custom_size)
+                image_size = size or ThemeManager.get_image_size(self.current_theme)
+                return ctk.CTkImage(PIL.Image.open(path), size=image_size)
             except Exception as e:
                 logging.error(f"Failed to load custom image: {e}")
         return None
 
-    def update_image(self, new_image):
-        image = self.process_image(new_image)
+    def update_image(self, new_image, size: tuple = None):
+        image = self.process_image(new_image, size)
         self.image_label.configure(image=image)
 
     def load_theme_image(self, theme_name: str):
         image_path = ThemeManager.get_images(theme_name)
         if image_path:
             self.update_image(image_path)
+    
+    def set_theme(self, theme_name: str):
+        self.current_theme = theme_name
 
 
 class Starluxe(ctk.CTk):
@@ -158,7 +162,7 @@ class BasePage(ctk.CTkFrame):
         self.title_label = FadeInLabel(self, text="StarLuxe", font=ctk.CTkFont(size=64, weight="bold"))
         self.title_label.grid(row=0, column=0, columnspan=2, pady=20, sticky="N")
 
-        self.frame = Image_Frame(self)
+        self.frame = Image_Frame(self, self.settings["Launcher"]["gui_theme"])
         self.frame.grid(row=1, column=0, columnspan=2, pady=20)
 
         self.text_1 = FadeInLabel(self, text="", font=ctk.CTkFont(size=26))
@@ -210,11 +214,8 @@ class HomePage(BasePage):
             msbox_launch = StyledPopup(title="Quick Launch", message=f"Do you want to start {last_game.replace('_', ' ').title()}?", option_1="Yes", option_2="No")
 
             if msbox_launch.get() == "Yes":
-                setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
-                setup.verify_installation()
-                setup.addon_support()
-                setup.xxmi_integration(last_game)
-                setup.inject_game()
+                launcher = LauncherDialog(self, self.settings)
+                launcher.open_game(last_game)
                 return
         
         if self.modal is None or not self.modal.winfo_exists():
@@ -366,7 +367,6 @@ class SetupPage(BasePage):
 
 if __name__ == "__main__":
     settings = load_config()
-    __version__ = "1.0.6"
 
     #* Load settings before starting the application
     themes = ThemeManager(resource_path("themes"))
@@ -376,7 +376,7 @@ if __name__ == "__main__":
     app = Starluxe(settings)
     setup_system = ReshadeSetup(settings, "", settings["Launcher"]["xxmi_feature_enabled"])
     result_system = setup_system.verify_system()
-    result_update = check_for_updates("Dimitri-Matheus", __version__, settings["Launcher"]["auto_check_update"])
+    result_update = check_for_updates("Dimitri-Matheus", settings["Launcher"]["auto_check_update"])
     sync_metadata(settings["Account"]["github_name"], settings["Account"]["repository_name"])
 
     if result_update["status"]:

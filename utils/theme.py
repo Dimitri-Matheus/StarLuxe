@@ -10,6 +10,8 @@ logging.basicConfig(level=logging.INFO)
 class ThemeManager:
     data: dict = {}
     current_theme_path: Path = None
+    default_size = {"Default": (157, 147), "Ghost": (157, 141)}
+    custom_size = (256, 256)
 
     def __init__(self, theme_path):
         self.themes_root = Path(theme_path)
@@ -70,6 +72,10 @@ class ThemeManager:
             if img_name.exists():
                 return img_name 
         return None
+    
+    @classmethod
+    def get_image_size(cls, theme_name: str) -> tuple[int, int]:
+        return cls.default_size.get(theme_name, cls.custom_size)
     
     @classmethod
     def get_images(cls, relative_path: str, fallback: str = None) -> str | None:

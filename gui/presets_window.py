@@ -60,9 +60,9 @@ class PresetsDialog(ctk.CTkToplevel):
         )
         if preset_info:
             return (
-                f"📦 {name} (v{preset_info["version"]})\n"
-                f"👤 {preset_info["author"]}\n"
-                f"🔗 {preset_info["source"]}\n"
+                f"{name} (v{preset_info["version"]})\n"
+                f"Author: {preset_info["author"]}\n"
+                f"Source: {preset_info["source"]}\n"
                 f"{preset_info["description"] or "No description"}"
             )
         else:
