@@ -96,7 +96,7 @@ class AppFrame(ctk.CTkFrame):
         StyledToolTip(self.switch_xxmi, message = (
             "Enabled: Integrates ReShade settings with the XXMI Launcher.\n"
             "Disabled: Leaves the XXMI Launcher unchanged.\n"
-            "Requires the path to be set below."
+            "Attention: The XXMI Launcher needs to be opened at least once!"
         ))
 
         self.switch_dxvk = ctk.CTkSwitch(self, text="DirectX", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)

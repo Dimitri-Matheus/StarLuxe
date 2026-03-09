@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.7'
+# nuitka-project: --product-version='1.0.8'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -306,17 +306,17 @@ class ConfigPage(BasePage):
 
         self.button_1.configure(text="Browser", command=lambda: self.select_folder())
 
-        self.button_2.configure(command=lambda: self.save_path())
-        StyledToolTip(self.button_2, message="Skip this step to set up the game path later.")
+        self.button_2.configure(text="Next", command=lambda: self.save_path())
+        StyledToolTip(self.button_2, message="Please enter a valid game path to continue.")
         self.update_button()
 
     def update_button(self, *args):
-        current_path = self.path_entry.get()
+        current_path = self.path_entry.get().strip()
         self.path_entry.configure(placeholder_text="C:/Games...")
         if not current_path:
-            self.button_2.configure(text="Skip")
+            self.button_2.configure(state="disabled", fg_color="#363636")
         else:
-            self.button_2.configure(text="Next")
+            self.button_2.configure(state="normal", fg_color=ThemeManager.get_custom_color("accent_color"))
 
     # Check and saves the path in settings.json
     def save_path(self):
@@ -360,7 +360,7 @@ class SetupPage(BasePage):
         self.button_icon = ctk.CTkImage(PIL.Image.open(resource_path("assets/icon/button-next.png")), size=(32, 32))
         self.button_1.configure(image=self.button_icon, width=0, height=0, fg_color="transparent", command=lambda: self.controller.show_page("ConfigPage"))
         self.button_1.grid_configure(pady=(40, 10))
-        StyledToolTip(self.button_1, message="🎉 Thanks for testing! Enjoy your experience!", delay=0.8)
+        StyledToolTip(self.button_1, message="🎉 Thanks for testing! Enjoy your experience!")
 
         self.button_2.grid_forget()
 

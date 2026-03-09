@@ -164,8 +164,9 @@ class ReshadeSetup():
 
         except Exception as e:
             logging.error(f"ReShade.ini configuration failed: {e}")
+            #! Adjust alignment of the message box
             return {
-                "message": "Failed to configure ReShade!",
+                "message": "   Failed to configure ReShade!\n(Uninstall ReShade and try again)",
             }
             
         try:
@@ -201,8 +202,9 @@ class ReshadeSetup():
 
         except Exception as e:
             logging.error(f"Injection process failed: {e}")
+            #! Adjust alignment of the message box
             return {
-                "message": "ReShade Injection failed!",
+                "message": "      ReShade Injection failed!\n(Uninstall ReShade and try again)",
             }
     
     def xxmi_integration(self, game_code):
@@ -214,7 +216,8 @@ class ReshadeSetup():
             "genshin_impact": "GIMI",
             "honkai_star_rail": "SRMI",
             "wuthering_waves": "WWMI",
-            "zenless_zone_zero": "ZZMI"
+            "zenless_zone_zero": "ZZMI",
+            "arknights_endfield": "EFMI"
         }
 
         importer_key = IMPORTER_MAP.get(game_code)
@@ -224,13 +227,22 @@ class ReshadeSetup():
 
         logging.info(f"Mapping for {game_code} successfully found!")
 
+        xxmi_root = Path(self.xxmi_src).parent
+        mount_path = xxmi_root / importer_key / "d3d11.dll"
+        if mount_path.exists():
+            logging.info(f"XXMI mount point already exists: {mount_path}")
+        else:
+            logging.error(f"XXMI d3d11.dll not found for {importer_key} in any known location!")
+            return
+
         try:
+            libraries = f"{self.reshade_dll}\n{mount_path}"
             with open(self.xxmi_src, "r+", encoding="utf-8") as f:
                 config_data = json.load(f)
 
                 importer_settings = config_data["Importers"][importer_key]["Importer"]
                 importer_settings["extra_libraries_enabled"] = True
-                importer_settings["extra_libraries"] = str(self.reshade_dll)
+                importer_settings["extra_libraries"] = libraries
 
                 f.seek(0)
                 json.dump(config_data, f, indent=4)
