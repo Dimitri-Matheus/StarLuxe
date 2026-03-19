@@ -5,7 +5,7 @@ from pathlib import Path
 from utils.path import resource_path
 # from config import load_config
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ThemeManager:
     data: dict = {}
@@ -38,22 +38,22 @@ class ThemeManager:
         theme_json = self.find_theme(ThemeManager.current_theme_path)
 
         if not theme_json or not theme_json.exists():
-            logging.warning(f"Theme not found! Loading default theme")
+            logger.warning(f"Theme not found! Loading default theme")
             ThemeManager.current_theme_path = self.themes_root / "Default"
             theme_json = self.find_theme(ThemeManager.current_theme_path)
 
             if not theme_json:
-                logging.error("Default theme not found!")
+                logger.error("Default theme not found!")
                 return ""
         
         try:
             with open(theme_json, "r", encoding="utf-8") as file:
                 ThemeManager.data = json.load(file)
         except Exception as e:
-            logging.error(f"Error loading theme: {e}")
+            logger.error(f"Error loading theme: {e}")
             ThemeManager.data = {}
 
-        # logging.info(f"Theme {name} loaded successfully!")
+        # logger.info(f"Theme {name} loaded successfully!")
         return str(theme_json)
     
     @classmethod
@@ -96,5 +96,5 @@ class ThemeManager:
 #! Test functions
 # config = load_config()
 # theme_manager = ThemeManager(resource_path("themes"))
-# logging.info(theme_manager.get_available_themes())
-# logging.info(f"Data: {theme_manager.load_theme(config["Launcher"]["gui_theme"])}")
+# logger.info(theme_manager.get_available_themes())
+# logger.info(f"Data: {theme_manager.load_theme(config["Launcher"]["gui_theme"])}")

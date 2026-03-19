@@ -1,13 +1,13 @@
 """Utils for all related to Reshade injection logic"""
 
-import psutil, shutil, subprocess, logging, json, hashlib, time, configparser
+import psutil, shutil, subprocess, logging, json, hashlib, time, configparser, winreg
 from pathlib import Path
 from pymem import Pymem
 from pymem.process import inject_dll_from_path
 from utils.path import relative_path
 # from config import load_config
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_filesystem(path: str) -> str:
     try:
@@ -20,7 +20,7 @@ def get_filesystem(path: str) -> str:
                 return partition.fstype.upper()
         
     except Exception as e:
-        logging.warning(f"Error detecting filesystem type: {e}")
+        logger.warning(f"Error detecting filesystem type: {e}")
 
 
 class ReshadeSetup():
@@ -50,7 +50,7 @@ class ReshadeSetup():
     def verify_installation(self):
         try:
             if not self.game_base or not self.game_path.is_dir():
-                logging.error(f"Missing or invalid path: {self.game_path}")
+                logger.error(f"Missing or invalid path: {self.game_path}")
                 raise FileNotFoundError("Game installation not found!")
 
             for code, config in self.game_config.items():
@@ -62,7 +62,7 @@ class ReshadeSetup():
                     self.exe_path = exe_path
                     break
             else:
-                logging.error("Could not find a supported game executable in the selected folder")
+                logger.error("Could not find a supported game executable in the selected folder")
                 raise FileNotFoundError("Game executable not found!")
 
         except Exception as e:
@@ -72,7 +72,7 @@ class ReshadeSetup():
                 "error_type": "installation"
             }
         
-        logging.info(f"All files for {self.game_code} verified successfully!")
+        logger.info(f"All files for {self.game_code} verified successfully!")
         return {
             "status": True,
             "game_code": self.game_code
@@ -95,11 +95,11 @@ class ReshadeSetup():
                 exists = path.is_file() if item != "dir" else path.is_dir()
 
                 if not exists:
-                    logging.error(f"Missing required {name}: {path}")
+                    logger.error(f"Missing required {name}: {path}")
                     raise FileNotFoundError(f"{name} not found!")
                 
                 if item == "xxmi" and path.name != "XXMI Launcher Config.json":
-                    logging.error(f"Invalid XXMI file name: {path.name}")
+                    logger.error(f"Invalid XXMI file name: {path.name}")
                     raise FileNotFoundError("Please select XXMI Launcher Config.json")
 
         except Exception as e:
@@ -109,7 +109,7 @@ class ReshadeSetup():
                 "error_type": "system"
             }
 
-        logging.info(f"All system files have been successfully verified!")
+        logger.info(f"All system files have been successfully verified!")
         return {
             "status": True
         }
@@ -120,7 +120,7 @@ class ReshadeSetup():
         
         ini_dest = self.game_dir / "ReShade.ini"
         if not ini_dest.is_file():
-            logging.info(f"Copying ReShade.ini -> {ini_dest}")
+            logger.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
 
         try:
@@ -132,12 +132,12 @@ class ReshadeSetup():
                 link_shader = self.game_dir / self.shaders_src.name
                 if not link_shader.exists():
                     link_shader.symlink_to(self.shaders_src, target_is_directory=True)
-                    logging.info(f"Creating symbolic link: {link_shader} -> {self.shaders_src}")
+                    logger.info(f"Creating symbolic link: {link_shader} -> {self.shaders_src}")
 
                 link_preset = self.game_dir / self.download_src.name
                 if not link_preset.exists():
                     link_preset.symlink_to(self.download_src, target_is_directory=True)
-                    logging.info(f"Creating symbolic link: {link_preset} -> {self.download_src}")
+                    logger.info(f"Creating symbolic link: {link_preset} -> {self.download_src}")
 
             required_keys = ["EffectSearchPaths", "TextureSearchPaths", "PresetPath"]
             path_flag = False
@@ -160,13 +160,15 @@ class ReshadeSetup():
                 with open(ini_dest, "w") as file:
                     ini_file.write(file)
 
-                logging.info("ReShade.ini configured successfully with absolute paths!")
+                logger.info("ReShade.ini configured successfully with absolute paths!")
 
         except Exception as e:
-            logging.error(f"ReShade.ini configuration failed: {e}")
-            #! Adjust alignment of the message box
+            logger.error(f"ReShade.ini configuration failed: {e}")
             return {
-                "message": "   Failed to configure ReShade!\n(Uninstall ReShade and try again)",
+                "message": (
+                    "\nFailed to configure ReShade!\n"
+                    "\n(Uninstall ReShade and retry)\n"
+                ),
             }
             
         try:
@@ -175,7 +177,7 @@ class ReshadeSetup():
                 args.append("-force-d3d11")
 
             subprocess.Popen(args, cwd=str(self.game_dir))
-            logging.info(f"Waiting for {self.exe_path.name} to start...")
+            logger.info(f"Waiting for {self.exe_path.name} to start...")
 
             start = time.time()
             process_name = None
@@ -190,26 +192,37 @@ class ReshadeSetup():
             if process_name:
                 if self.direct_enabled:
                     inject_dll_from_path(process_name.process_handle, str(self.reshade_dxvk))
-                    logging.info(f"{self.reshade_dxvk.name} injected successfully!")
+                    logger.info(f"{self.reshade_dxvk.name} injected successfully!")
+                elif self.game_code == "arknights_endfield":
+                    reg_path = r"SOFTWARE\Khronos\Vulkan\ImplicitLayers"
+                    reshade_json = str(self.reshade_config.resolve())
+                    logger.info("Vulkan detected!")
+                    try:
+                        key = winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
+                        winreg.SetValueEx(key, reshade_json, 0, winreg.REG_DWORD, 0)
+                        winreg.CloseKey(key)
+                        logger.info(f"Registry updated with: {reshade_json}")
+                    except Exception as e:
+                        logger.error(f"Failed to update registry: {e}")
                 else:
                     inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
-                    logging.info(f"{self.reshade_dll.name} injected successfully!")
-                return {
-                    "message": None
-                }
+                    logger.info(f"{self.reshade_dll.name} injected successfully!")
+                return {"message": None}
             else:
                 raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds...")
 
         except Exception as e:
-            logging.error(f"Injection process failed: {e}")
-            #! Adjust alignment of the message box
+            logger.error(f"Injection process failed: {e}")
             return {
-                "message": "      ReShade Injection failed!\n(Uninstall ReShade and try again)",
+                "message": (
+                    "\nFailed to configure ReShade!\n"
+                    "\n(Uninstall ReShade and retry)\n"
+                ),
             }
     
     def xxmi_integration(self, game_code):
         if not self.xxmi_enabled:
-            logging.info(f"XXMI Integration inactive")
+            logger.info(f"XXMI Integration inactive")
             return
 
         IMPORTER_MAP = {
@@ -222,17 +235,17 @@ class ReshadeSetup():
 
         importer_key = IMPORTER_MAP.get(game_code)
         if not importer_key:
-            logging.warning(f"No XXMI importer mapped for game {game_code}!")
+            logger.warning(f"No XXMI importer mapped for game {game_code}!")
             return None
 
-        logging.info(f"Mapping for {game_code} successfully found!")
+        logger.info(f"Mapping for {game_code} successfully found!")
 
         xxmi_root = Path(self.xxmi_src).parent
         mount_path = xxmi_root / importer_key / "d3d11.dll"
         if mount_path.exists():
-            logging.info(f"XXMI mount point already exists: {mount_path}")
+            logger.info(f"XXMI mount point already exists: {mount_path}")
         else:
-            logging.error(f"XXMI d3d11.dll not found for {importer_key} in any known location!")
+            logger.error(f"XXMI d3d11.dll not found for {importer_key} in any known location!")
             return
 
         try:
@@ -248,10 +261,10 @@ class ReshadeSetup():
                 json.dump(config_data, f, indent=4)
                 f.truncate()
             
-            logging.info("XXMI configuration file updated successfully!")
+            logger.info("XXMI configuration file updated successfully!")
 
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
 
     # Define Hash files
     def _sha256(self, file_source: Path, file_destination: Path) -> bool:
@@ -271,12 +284,12 @@ class ReshadeSetup():
         if self.direct_enabled and not self.reshade_dxvk.is_file():
             try:
                 shutil.copy2(self.reshade_dll, self.reshade_dxvk)
-                logging.info(f"File {self.reshade_dxvk.name} created successfully!")
+                logger.info(f"File {self.reshade_dxvk.name} created successfully!")
             except Exception as e:
-                logging.error(f"Failed to copy: {e}")
+                logger.error(f"Failed to copy: {e}")
                 return
         else:
-            logging.info(f"DirectX inactive")
+            logger.info(f"DirectX inactive")
 
     def addon_support(self):
         standard_folder = relative_path("resources/standard")
@@ -284,27 +297,27 @@ class ReshadeSetup():
 
         if self.reshade_enabled:
             source_file = addon_folder
-            logging.info("Reshade Addon active")
+            logger.info("Reshade Addon active")
         else:
             source_file = standard_folder
-            logging.info("Reshade Addon inactive")
+            logger.info("Reshade Addon inactive")
 
         dll_name = self.reshade_dll.name
         dll_path = source_file / dll_name
         dll_dest = relative_path("script/") / dll_name
 
         if not dll_path.is_file():
-            logging.warning(f"Source file not found: {dll_path}")
+            logger.warning(f"Source file not found: {dll_path}")
             return
 
         if self._sha256(dll_path, dll_dest):
             try:
                 shutil.copy2(dll_path, dll_dest)
-                logging.info("File updated successfully!")
+                logger.info("File updated successfully!")
             except Exception as e:
-                logging.error(f"Failed to copy {dll_name}: {e}")
+                logger.error(f"Failed to copy {dll_name}: {e}")
         else:
-            logging.info(f"{dll_name} is already up to date!")
+            logger.info(f"{dll_name} is already up to date!")
 
 
 #! Test functions
@@ -318,11 +331,11 @@ class ReshadeSetup():
 # setup_reshade.dxvk_support()
 # print(get_filesystem("None"))
 
-# message_1 = result_install.get("message", "Tudo certo!")
-# error_type_1 = result_install.get("error_type", "Tudo certo!")
+# message_1 = result_install.get("message", "success!")
+# error_type_1 = result_install.get("error_type", "success!")
 
-# message_2 = result_system.get("message", "Tudo certo!")
-# error_type_2 = result_system.get("error_type", "Tudo certo!")
+# message_2 = result_system.get("message", "success!")
+# error_type_2 = result_system.get("error_type", "success!")
 
 # print(f"\nA Mensagem: {message_1}\nO Tipo de erro: {error_type_1}")
 # print(f"\nA Mensagem: {message_2}\nO Tipo de erro: {error_type_2}")

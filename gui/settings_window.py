@@ -10,7 +10,7 @@ from utils.injector import ReshadeSetup
 from utils.theme import ThemeManager
 from .widgets import StyledToolTip, StyledPopup
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class GamePathFrame(ctk.CTkFrame):
     def __init__(self, master, settings):
@@ -265,20 +265,20 @@ class SettingsDialog(ctk.CTkToplevel):
         if os.path.exists(install_path):
             os.startfile(install_path)
         else:
-            logging.warning(f"Install forder not found! {install_path}")
+            logger.warning(f"Install forder not found! {install_path}")
         
     def reset_config(self):
         msbox_restore = StyledPopup(title="Warning", message="Restore defaults and restart the app?", option_1="Ok", option_2="Cancel")
 
         if msbox_restore.get() == "Ok":
             delete_config()
-            logging.info("Settings have been restored to default!")
+            logger.info("Settings have been restored to default!")
             try:
                 exec_path = sys.argv[0]
                 os.startfile(exec_path)
                 self.controller.destroy()
             except Exception as e:
-                logging.error(f"Failed to restart the application: {e}")
+                logger.error(f"Failed to restart the application: {e}")
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False

@@ -4,7 +4,7 @@ import customtkinter as ctk
 import PIL.Image, threading, logging, sys
 from utils.path import resource_path
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class DownloadDialog(ctk.CTkToplevel):
     def __init__(self, master, message, window_close, download_thread=None):
@@ -54,7 +54,7 @@ class DownloadDialog(ctk.CTkToplevel):
             self.run_download()
 
     def disable_close(self):
-        logging.warning("Cannot close window during download!")
+        logger.warning("Cannot close window during download!")
 
     def app_close(self):
         if self.window_close:
@@ -82,7 +82,7 @@ class DownloadDialog(ctk.CTkToplevel):
                 self.after(500, self.destroy)
 
         except Exception as e:
-            logging.error(f"Error during download: {e}")
+            logger.error(f"Error during download: {e}")
             self.button.grid(row=4, column=0, pady=10)
             self.protocol("WM_DELETE_WINDOW", self.app_close)
 

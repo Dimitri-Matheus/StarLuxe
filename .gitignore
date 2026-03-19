@@ -10,6 +10,7 @@
 settings.json
 script/reshade-shaders/
 utils/_env.py
+StarLuxe.log
 
 # Created by git when using merge tools for conflicts
 *.BACKUP.*

@@ -9,7 +9,7 @@ from utils.path import resource_path
 from utils.theme import ThemeManager
 from .widgets import StyledToolTip
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class PresetsDialog(ctk.CTkToplevel):
     def __init__(self, master, settings_load: dict):
@@ -25,7 +25,7 @@ class PresetsDialog(ctk.CTkToplevel):
         self.grab_set()
 
         def show_value(selected_option):
-            logging.info(f"Select: {selected_option}")
+            logger.info(f"Select: {selected_option}")
             self.selected_presets = selected_option
         
         
@@ -75,7 +75,7 @@ class PresetsDialog(ctk.CTkToplevel):
             self.settings["Packages"]["selected"] = ""
         
         save_config(self.settings)
-        logging.info(f"Saved preset: {self.settings["Packages"]["selected"]}")
+        logger.info(f"Saved preset: {self.settings["Packages"]["selected"]}")
         self.destroy()
 
     def iconbitmap(self, bitmap):

@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.8'
+# nuitka-project: --product-version='1.0.85'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -34,7 +34,7 @@ from utils.theme import ThemeManager
 from gui import SettingsDialog, PresetsDialog, LauncherDialog, DownloadDialog
 from gui.widgets import StyledToolTip, StyledPopup
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Animations
 class FadeInLabel(ctk.CTkLabel):
@@ -85,7 +85,7 @@ class Image_Frame(ctk.CTkFrame):
                 image_size = size or ThemeManager.get_image_size(self.current_theme)
                 return ctk.CTkImage(PIL.Image.open(path), size=image_size)
             except Exception as e:
-                logging.error(f"Failed to load custom image: {e}")
+                logger.error(f"Failed to load custom image: {e}")
         return None
 
     def update_image(self, new_image, size: tuple = None):
@@ -104,7 +104,7 @@ class Image_Frame(ctk.CTkFrame):
 class Starluxe(ctk.CTk):
     def __init__(self, settings: dict):
         super().__init__()
-        logging.info("App started")
+        logger.debug("App started")
 
         self.title("")
         self.geometry("1024x768")
@@ -142,7 +142,7 @@ class Starluxe(ctk.CTk):
     def show_page(self, page_name: str):
         page = self.pages[page_name]
         page.tkraise()
-        logging.info(f"Page initialized: {page_name}")
+        logger.info(f"Page initialized: {page_name}")
     
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
@@ -366,12 +366,25 @@ class SetupPage(BasePage):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(name)s] %(levelname)s %(message)s",
+        force=True,
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.FileHandler(resource_path("StarLuxe.log"), encoding="utf-8"),
+            logging.StreamHandler()
+        ]
+    )
+
+    for lib in ("PIL", "urllib3", "botocore", "boto3", "s3transfer"):
+        logging.getLogger(lib).setLevel(logging.WARNING)
+
     settings = load_config()
 
     #* Load settings before starting the application
     themes = ThemeManager(resource_path("themes"))
     ctk.set_default_color_theme(themes.load_theme(settings["Launcher"]["gui_theme"]))
-    logging.info("Settings loaded")
 
     app = Starluxe(settings)
     setup_system = ReshadeSetup(settings, "", settings["Launcher"]["xxmi_feature_enabled"])

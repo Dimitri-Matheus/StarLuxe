@@ -12,7 +12,7 @@ from utils.path import resource_path
 from utils.injector import ReshadeSetup
 from .widgets import StyledToolTip, StyledPopup
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class LauncherDialog(ctk.CTkToplevel):
     def __init__(self, master, settings_load: dict):
@@ -89,7 +89,7 @@ class LauncherDialog(ctk.CTkToplevel):
         page_show = self.pages[page_index]
         page_show.tkraise()
         self.current_page_index = page_index
-        logging.info(f"Navigated to page {page_index}")
+        logger.info(f"Navigated to page {page_index}")
 
     def next_page(self):
         self.show_page(self.current_page_index + 1)
@@ -98,7 +98,7 @@ class LauncherDialog(ctk.CTkToplevel):
         self.show_page(self.current_page_index - 1)
 
     def refresh_page(self):
-        logging.info("Refreshing all pages...")
+        logger.info("Refreshing all pages...")
         current_page = self.current_page_index
         self.controller_pages()
         self.show_page(current_page)
@@ -188,14 +188,14 @@ class GamePage(ctk.CTkFrame):
 
         if full_path.name != "empty.png":
             full_path.unlink()
-            logging.info(f"Icon file '{full_path.name}' removed successfully!")
+            logger.info(f"Icon file '{full_path.name}' removed successfully!")
         else:
-            logging.info(f"Icon '{full_path.name}' is a default file and will not be removed!")
+            logger.info(f"Icon '{full_path.name}' is a default file and will not be removed!")
 
         self.controller.settings["Games"].pop(game_id, None)
         save_config(self.controller.settings)
         self.controller.refresh_page()
-        logging.info(f"Game '{game_id}' removed from configuration!")
+        logger.info(f"Game '{game_id}' removed from configuration!")
 
     def remove_reshade(self, game_id: str):
         game_data = self.controller.settings["Games"][game_id]
@@ -213,9 +213,9 @@ class GamePage(ctk.CTkFrame):
         removed = []
         for item in files:
             object_path = Path(folder) / item
-            if object_path.exists():
+            if object_path.exists() or object_path.is_symlink():
                 try:
-                    if object_path.is_symlink:
+                    if object_path.is_symlink():
                         object_path.unlink()
                     elif object_path.is_dir():
                         shutil.rmtree(object_path)
@@ -223,14 +223,14 @@ class GamePage(ctk.CTkFrame):
                         object_path.unlink()
                     removed.append(object_path.name)
                 except Exception as e:
-                    logging.error(f"Failed to remove: {e}")
+                    logger.error(f"Failed to remove: {e}")
             else:
-                logging.info(f"{item} not found in the game folder")
+                logger.info(f"{item} not found in the game folder")
         
         if not removed:
             StyledPopup(message="ReShade is not installed in this game!")
         else:
-            logging.info(f"Removed {removed} files from the game folder!")
+            logger.info(f"Removed {removed} files from the game folder!")
             StyledPopup(message="ReShade uninstallation completed!")
 
 
@@ -311,7 +311,7 @@ class InputGame(ctk.CTkToplevel):
             self.icon_preview.configure(image=loaded_icon)
             self.name_input.insert(0, game_data.get("display_name", game_edit.replace("_", " ").title()))
             self.path_entry.insert(0, str(Path(game_data.get("folder")) / game_data.get("exe")))
-            logging.info("Data loaded successfully!")
+            logger.info("Data loaded successfully!")
 
     def select_file(self, path, name):
         filename = filedialog.askopenfilename(parent=self, title="Select Game Executable", initialdir="/", defaultextension=".exe", filetypes=[("Executable files","*.exe"), ("All files", "*.*")])
@@ -331,10 +331,10 @@ class InputGame(ctk.CTkToplevel):
                 new_icon = ctk.CTkImage(PIL.Image.open(resource_path(icon_path)), size=(128, 128))
                 self.icon_preview.configure(image=new_icon)
                 self.icon_source = icon_path
-                logging.info(f"Load selected icon: {icon_path}")
+                logger.info(f"Load selected icon: {icon_path}")
 
             except Exception as e:
-                logging.error(f"Failed to load selected icon: {e}")
+                logger.error(f"Failed to load selected icon: {e}")
 
     def save_game(self):
         game_name = re.sub(r'(?<=[a-z])(?=[A-Z])|[^a-zA-Z]', ' ', self.name_input.get()).replace(' ', '_').strip("_").lower()
@@ -360,9 +360,9 @@ class InputGame(ctk.CTkToplevel):
                 shutil.copy2(self.icon_source, dest_path)
 
                 icon_save = f"assets/icon/{file_name}"
-                logging.info(f"Icon copied to: {dest_folder}")
+                logger.info(f"Icon copied to: {dest_folder}")
             except Exception:
-                logging.exception("Failed to copy new icon!")
+                logger.exception("Failed to copy new icon!")
         elif self.game_edit:
             icon_save = self.settings["Games"].get(self.game_edit, {}).get("icon_path", "assets/icon/placeholder.png")
         
@@ -376,14 +376,14 @@ class InputGame(ctk.CTkToplevel):
 
         if not self.game_edit:
             games[game_name] = settings_data
-            logging.info(f"Game added: {game_name}")
+            logger.info(f"Game added: {game_name}")
         elif game_name == self.game_edit:
             games[game_name].update(settings_data)
-            logging.info(f"Game updated: {game_name}")
+            logger.info(f"Game updated: {game_name}")
         else:
             games[game_name] = games.pop(self.game_edit, {})
             games[game_name].update(settings_data)
-            logging.info(f"Game '{self.game_edit}' was renamed to '{game_name}'")
+            logger.info(f"Game '{self.game_edit}' was renamed to '{game_name}'")
         
         save_config(self.settings)
         self.callback()
