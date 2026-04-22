@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.85'
+# nuitka-project: --product-version='1.0.9'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -26,7 +26,7 @@ from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 import logging, os, queue
-from utils.downloader import download_from_github, download_r2_dependencies, check_for_updates, download_update, sync_metadata
+from utils.downloader import download_from_github, download_dependencies, check_for_updates, download_update, sync_metadata
 from utils.config import load_config, save_config
 from utils.injector import ReshadeSetup
 from utils.path import resource_path
@@ -404,7 +404,7 @@ if __name__ == "__main__":
     #! Hard‑Coded
     if not result_system["status"] and result_system["message"].strip().lower().count("shaders folder not found!") == 1:
         def download_task(progress_callback):
-            return download_r2_dependencies(settings["Packages"]["download_dir"], progress_callback)
+            return download_dependencies(settings["Packages"]["download_dir"], progress_callback)
         DownloadDialog(app, "Downloading Dependencies", True, download_task)
     
     app.mainloop()

@@ -1,6 +1,6 @@
 """Utils for all related to Reshade injection logic"""
 
-import psutil, shutil, subprocess, logging, json, hashlib, time, configparser, winreg
+import psutil, shutil, subprocess, logging, json, hashlib, time, configparser, os
 from pathlib import Path
 from pymem import Pymem
 from pymem.process import inject_dll_from_path
@@ -176,7 +176,10 @@ class ReshadeSetup():
             if self.direct_enabled:
                 args.append("-force-d3d11")
 
-            subprocess.Popen(args, cwd=str(self.game_dir))
+            reshade_env = os.environ.copy()
+            reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"
+
+            subprocess.Popen(args, cwd=str(self.game_dir), env=reshade_env)
             logger.info(f"Waiting for {self.exe_path.name} to start...")
 
             start = time.time()
@@ -193,17 +196,6 @@ class ReshadeSetup():
                 if self.direct_enabled:
                     inject_dll_from_path(process_name.process_handle, str(self.reshade_dxvk))
                     logger.info(f"{self.reshade_dxvk.name} injected successfully!")
-                elif self.game_code == "arknights_endfield":
-                    reg_path = r"SOFTWARE\Khronos\Vulkan\ImplicitLayers"
-                    reshade_json = str(self.reshade_config.resolve())
-                    logger.info("Vulkan detected!")
-                    try:
-                        key = winreg.CreateKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
-                        winreg.SetValueEx(key, reshade_json, 0, winreg.REG_DWORD, 0)
-                        winreg.CloseKey(key)
-                        logger.info(f"Registry updated with: {reshade_json}")
-                    except Exception as e:
-                        logger.error(f"Failed to update registry: {e}")
                 else:
                     inject_dll_from_path(process_name.process_handle, str(self.reshade_dll))
                     logger.info(f"{self.reshade_dll.name} injected successfully!")

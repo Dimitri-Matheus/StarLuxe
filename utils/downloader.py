@@ -1,6 +1,6 @@
 """Utils for all related to downloading presets, updates and files"""
 
-import os, requests, logging, boto3, zipfile, sys, tempfile, subprocess, json
+import os, requests, logging, zipfile, sys, tempfile, subprocess, json
 from botocore.exceptions import ClientError, EndpointConnectionError
 from pathlib import Path
 from utils.path import resource_path
@@ -145,40 +145,42 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
     result_queue.put(response)
 
 
-def download_r2_dependencies(directory, progress_callback=None):
-    bucket_name = _env.PRIVATE_BUCKET_NAME
-    key_name = _env.NAME_FILE
-    
+def download_dependencies(directory, progress_callback=None):
+    download_url = _env.BASE_URL
+    file_name = _env.NAME_FILE
     progress_callback = progress_callback or (lambda x: None) # Use the given callback or an empty function
 
     validation_items = {
-        ClientError: "Server Connection Failed!",
-        EndpointConnectionError: "No Internet Connection Detected!",
+        requests.ConnectionError: "Server Connection Failed!",
+        requests.Timeout: "Connection took too long!",
+        requests.HTTPError: "Server Connection Failed!",
         zipfile.BadZipFile: "Downloaded File Corrupted!",
     }
 
     try:
         download_dir = Path(directory).parent
-        if not all([_env.KEY_ID_RO, _env.APPLICATION_KEY_PRIVATE_RO]):
-            raise ValueError("R2 credentials not configured!")
-        logger.info(f"Connecting to R2...")
-
+        file_path = download_dir / file_name
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Connecting to Server...")
         progress_callback(0.1)
 
-        r2 = boto3.resource(
-            service_name='s3',
-            endpoint_url=_env.ENDPOINT,
-            aws_access_key_id=_env.KEY_ID_RO,
-            aws_secret_access_key=_env.APPLICATION_KEY_PRIVATE_RO
-        )
+        logger.info(f"Downloading {file_name}...")
+        response = requests.get(download_url, stream=True, headers={"User-Agent": _env.USER_AGENT}, timeout=30)
+        response.raise_for_status()
 
-        file_path = download_dir / key_name
-        file_path.parent.mkdir(parents=True, exist_ok=True)
+        total_size = int(response.headers.get("content-length", 0))
+        download = 0
 
-        logger.info(f"Downloading {key_name}...")
-        progress_callback(0.3)
+        with open(file_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    download += len(chunk)
 
-        r2.Bucket(bucket_name).download_file(key_name, str(file_path))
+                    if total_size > 0:
+                        progress = 0.1 + (download / total_size) * 0.6
+                        progress_callback(progress)
+        
         progress_callback(0.7)
 
         with zipfile.ZipFile(file_path, "r") as zip_ref:
@@ -187,7 +189,7 @@ def download_r2_dependencies(directory, progress_callback=None):
         progress_callback(0.9)
 
         file_path.unlink()
-        logger.info(f"Deleted {key_name}")
+        logger.info(f"Deleted {file_name}")
         progress_callback(1.0)
 
         logger.info("All dependencies have been downloaded successfully!")
@@ -198,7 +200,13 @@ def download_r2_dependencies(directory, progress_callback=None):
     except tuple(validation_items.keys()) as e:
         error_type = type(e)
         message = validation_items.get(error_type, str(e))
-        logger.error(f"{error_type.__name__}: {message}")
+
+        if hasattr(e, "response") and hasattr(e.response, "status_code"):
+            status_code = e.response.status_code
+            logger.error(f"{error_type.__name__}: {message}, HTTPStatus={status_code}")
+        else:
+            logger.error(f"{error_type.__name__}: {message}")
+        
         progress_callback(0.0)
         return {
             "status": False,
@@ -217,6 +225,7 @@ def download_r2_dependencies(directory, progress_callback=None):
 def check_for_updates(github_owner, enabled_auto_check_update):
     current_version = get_version(size=3)
     remote_url = f"https://api.github.com/repos/{github_owner}/StarLuxe/releases/latest"
+
     if not enabled_auto_check_update:
         logger.info(f"Check update inactive")
         return {
