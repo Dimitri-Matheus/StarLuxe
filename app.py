@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.9'
+# nuitka-project: --product-version='1.0.95'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -377,7 +377,7 @@ if __name__ == "__main__":
         ]
     )
 
-    for lib in ("PIL", "urllib3", "botocore", "boto3", "s3transfer"):
+    for lib in ("PIL", "urllib3"):
         logging.getLogger(lib).setLevel(logging.WARNING)
 
     settings = load_config()

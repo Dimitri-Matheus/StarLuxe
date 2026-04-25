@@ -1,7 +1,7 @@
 """Utils for all related to downloading presets, updates and files"""
 
 import os, requests, logging, zipfile, sys, tempfile, subprocess, json
-from botocore.exceptions import ClientError, EndpointConnectionError
+from requests.exceptions import ConnectTimeout, ReadTimeout, ConnectionError, Timeout, HTTPError
 from pathlib import Path
 from utils.path import resource_path
 from packaging import version
@@ -69,9 +69,11 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
     progress_callback = progress_callback or (lambda x: None)
 
     validation_items = {
-        requests.ConnectionError: "Failed to connect to server!",
-        requests.Timeout: "The server took too long to respond.",
-        requests.HTTPError: "Connection error with the server."
+        ConnectionError: "Failed to connect to GitHub!",
+        ConnectTimeout: "Connection timed out!",
+        ReadTimeout: "GitHub response took too long!",
+        Timeout: "Connection timed out!",
+        HTTPError: "GitHub returned an error!",
     }
 
     try:
@@ -146,14 +148,15 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
 
 
 def download_dependencies(directory, progress_callback=None):
-    download_url = _env.BASE_URL
-    file_name = _env.NAME_FILE
+    file_name = "reshade-shaders.zip"
     progress_callback = progress_callback or (lambda x: None) # Use the given callback or an empty function
 
     validation_items = {
-        requests.ConnectionError: "Server Connection Failed!",
-        requests.Timeout: "Connection took too long!",
-        requests.HTTPError: "Server Connection Failed!",
+        ConnectionError: "Failed to connect to the server!",
+        ConnectTimeout: "Connection timed out!",
+        ReadTimeout: "The server took too long to respond!",
+        Timeout: "Connection timed out!", 
+        HTTPError: "Failed to connect to the server!",
         zipfile.BadZipFile: "Downloaded File Corrupted!",
     }
 
@@ -165,7 +168,7 @@ def download_dependencies(directory, progress_callback=None):
         progress_callback(0.1)
 
         logger.info(f"Downloading {file_name}...")
-        response = requests.get(download_url, stream=True, headers={"User-Agent": _env.USER_AGENT}, timeout=30)
+        response = requests.get(_env.BASE_URL, stream=True, headers={"User-Agent": _env.USER_AGENT}, timeout=30)
         response.raise_for_status()
 
         total_size = int(response.headers.get("content-length", 0))
