@@ -58,12 +58,6 @@ default = {
             "exe": "ZenlessZoneZero.exe",
             "subpath": ""
         },
-        "duet_night_abyss": {
-            "icon_path": "assets/games/DNA.png",
-            "folder": "",
-            "exe": "EM-Win64-Shipping.exe",
-            "subpath": "EM/Binaries/Win64"
-        },
         "arknights_endfield": {
             "icon_path": "assets/games/AKE.png",
             "folder": "",
