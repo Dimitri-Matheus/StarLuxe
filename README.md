@@ -1,7 +1,7 @@
 <h1 align="center">StarLuxe Launcher</h1>
 
 <p align="center">
-	<img width="1024" height="1024" src="https://github.com/user-attachments/assets/1a7ee5a5-b672-4b08-b90d-ce36272a675c"  alt="image"/>
+  <img src="https://github.com/user-attachments/assets/1a7ee5a5-b672-4b08-b90d-ce36272a675c" alt="StarLuxe Launcher Logo ou Preview" />
 </p>
 
 
@@ -28,7 +28,9 @@ On the main screen, press the **Start** button
 - Clone this [repository](https://github.com/Dimitri-Matheus/HSR-Script.git)
    - Install the required libraries with the following command
 
-<img width="1460" height="614" alt="terminal" src="https://github.com/user-attachments/assets/edf80a22-b281-43f0-a8ca-38ff2bad2ac9" />
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/edf80a22-b281-43f0-a8ca-38ff2bad2ac9" alt="terminal" />
+</p>
 
 <details>
 <summary><strong>How to create Custom Themes?</strong></summary>
