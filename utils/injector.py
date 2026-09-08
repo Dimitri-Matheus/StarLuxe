@@ -223,7 +223,7 @@ class ReshadeSetup():
 
     def __get_package_key(self, game_code) -> str:
         game_info = self.game_config.get(game_code, {})
-        key = game_info.get("package")
+        key = game_info.get("importers")
         if not key:
             logger.warning(f"No package key found for game {game_code}")
         return key
@@ -280,7 +280,7 @@ class ReshadeSetup():
 
         self.importer_name = importer_key
         script_dir = relative_path("script")
-        importer_dir = script_dir / importer_key
+        importer_dir = script_dir / "Loaders" / importer_key
 
         if not importer_dir.is_dir():
             logger.error(f"Model Importer folder not found: {importer_dir}")
