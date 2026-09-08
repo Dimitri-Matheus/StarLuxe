@@ -39,7 +39,7 @@ class DownloadDialog(ctk.CTkToplevel):
         self.download_label = ctk.CTkLabel(self, text="", image=self.download_icon)
         self.download_label.grid(row=1, column=0, pady=(0, 10))
 
-        self.title_label = ctk.CTkLabel(self, text=self.message, font=ctk.CTkFont(size=18))
+        self.title_label = ctk.CTkLabel(self, text=self.message, font=ctk.CTkFont(size=18), text_color=("black", "white"))
         self.title_label.grid(row=2, column=0, pady=10)
 
         self.progress_bar = ctk.CTkProgressBar(self, orientation="horizontal")

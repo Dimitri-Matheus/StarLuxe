@@ -28,8 +28,7 @@ class PresetsDialog(ctk.CTkToplevel):
             logger.info(f"Select: {selected_option}")
             self.selected_presets = selected_option
         
-        
-        listbox = CTkListbox(self, font=ctk.CTkFont(family="Verdana", size=15), multiple_selection=True, command=show_value, highlight_color="#515151")
+        listbox = CTkListbox(self, font=ctk.CTkFont(family="Verdana", size=15), multiple_selection=True, command=show_value, highlight_color="#515151", text_color=("black", "white"))
         listbox.pack(fill="both", expand=True, padx=10, pady=20)
 
         for p in self.metadata["presets"]:
@@ -42,7 +41,7 @@ class PresetsDialog(ctk.CTkToplevel):
         
         self.after(100, lambda: self.tooltips_items(listbox))
     
-        self.save_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=self.save_preset)
+        self.save_button = ctk.CTkButton(self, text="Save", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=self.save_preset, text_color=("black", "white"))
         self.save_button.configure(width=135, height=44, corner_radius=8, fg_color=ThemeManager.get_custom_color("secondary_color"))
         self.save_button.pack(pady=20)
 
@@ -60,10 +59,10 @@ class PresetsDialog(ctk.CTkToplevel):
         )
         if preset_info:
             return (
-                f"{name} (v{preset_info["version"]})\n"
-                f"Author: {preset_info["author"]}\n"
-                f"Source: {preset_info["source"]}\n"
-                f"{preset_info["description"] or "No description"}"
+                f"{name} (v{preset_info['version']})\n"
+                f"Author: {preset_info['author']}\n"
+                f"Source: {preset_info['source']}\n"
+                f"{preset_info['description'] or 'No description'}"
             )
         else:
             return f"{name}\n\nNo additional info available."
@@ -75,7 +74,7 @@ class PresetsDialog(ctk.CTkToplevel):
             self.settings["Packages"]["selected"] = ""
         
         save_config(self.settings)
-        logger.info(f"Saved preset: {self.settings["Packages"]["selected"]}")
+        logger.info(f"Saved preset: {self.settings['Packages']['selected']}")
         self.destroy()
 
     def iconbitmap(self, bitmap):

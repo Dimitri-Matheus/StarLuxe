@@ -125,6 +125,7 @@ class LauncherDialog(ctk.CTkToplevel):
         setup.addon_support()
         setup.dxvk_support()
         setup.xxmi_integration(game_code)
+        setup.model_importer_integration(game_code)
 
         result = setup.inject_game()
         self.destroy()
@@ -160,24 +161,20 @@ class GamePage(ctk.CTkFrame):
             launch_button.configure(width=128, height=128, corner_radius=8, fg_color="transparent")
             launch_button.grid(row=1, column=j, padx=20, pady=(20, 0), sticky="n")
 
-            text = ctk.CTkLabel(self, text=f"{name}", font=ctk.CTkFont(size=20))
+            text = ctk.CTkLabel(self, text=f"{name}", font=ctk.CTkFont(size=20), text_color=("black", "white"))
             text.grid(row=2, column=j, pady=(10, 0), sticky="n")
 
             context_menu = CustomDropdownMenu(master=self.controller, widget=launch_button, font=ctk.CTkFont(family="Verdana",size=12))
             context_menu.configure(border_color="gray20", border_width=1)
 
-            
             context_menu.add_option("Edit", command=lambda gid=game_id: self.controller.open_modal(gid))
             context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
             context_menu.add_separator()
             context_menu.add_option("Uninstall ReShade", command=lambda gid=game_id: self.remove_reshade(gid))
-            # Change to "Manage ReShade"
 
             launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
             launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
             StyledToolTip(launch_button, message="Right-click to manage this item")
-            #else:
-                #launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
 
     def remove_game(self, game_id: str):
         msbox_remove = StyledPopup(title="Warning", message="Do you really want to remove this game?", option_1="Ok", option_2="Cancel")
@@ -258,15 +255,15 @@ class InputGame(ctk.CTkToplevel):
         self.icon_preview = ctk.CTkLabel(self, text="", image=self.icon)
         self.icon_preview.grid(row=r, column=0, columnspan=2, pady=30, sticky="ew"); r += 1
 
-        self.text_1 = ctk.CTkLabel(self, text="Display name", font=ctk.CTkFont(size=18))
+        self.text_1 = ctk.CTkLabel(self, text="Display name", font=ctk.CTkFont(size=18), text_color=("black", "white"))
         self.text_1.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
-        self.name_input = ctk.CTkEntry(self, placeholder_text="Enter game name", font=ctk.CTkFont(family="Verdana", size=14))
+        self.name_input = ctk.CTkEntry(self, placeholder_text="Enter game name", font=ctk.CTkFont(family="Verdana", size=14), text_color=("black", "white"))
         self.name_input.configure(width=478, height=38, corner_radius=8)
         self.name_input.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
         StyledToolTip(self.name_input, message="The name will update automatically after selecting the executable.")
 
-        self.icon_button = ctk.CTkButton(self, text="Choose Icon", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_icon())
+        self.icon_button = ctk.CTkButton(self, text="Choose Icon", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_icon(), text_color=("black", "white"))
         self.icon_button.configure(width=123, height=38, corner_radius=8)
         self.icon_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
         StyledToolTip(self.icon_button, message=(
@@ -275,10 +272,10 @@ class InputGame(ctk.CTkToplevel):
             "2. Recommended size: 128x128 pixels."
         ))
 
-        self.text_2 = ctk.CTkLabel(self, text="Game Executable", font=ctk.CTkFont(size=18))
+        self.text_2 = ctk.CTkLabel(self, text="Game Executable", font=ctk.CTkFont(size=18), text_color=("black", "white"))
         self.text_2.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
-        self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
+        self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14), text_color=("black", "white"))
         self.path_entry.configure(width=478, height=38, corner_radius=8)
         self.path_entry.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
         StyledToolTip(self.path_entry, message=(
@@ -286,7 +283,7 @@ class InputGame(ctk.CTkToplevel):
             "Note: Make sure to select the correct .exe file."
         ))
 
-        self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
+        self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input), text_color=("black", "white"))
         self.browser_button.configure(width=123, height=38, corner_radius=8)
         self.browser_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
 
@@ -296,11 +293,11 @@ class InputGame(ctk.CTkToplevel):
         button_container.grid_columnconfigure((0, 3), weight=1)
         button_container.grid_columnconfigure((1, 2), weight=0)
 
-        self.button_4 = ctk.CTkButton(button_container, text="Ok", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.save_game())
+        self.button_4 = ctk.CTkButton(button_container, text="Ok", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.save_game(), text_color="white")
         self.button_4.configure(width=135, height=38, corner_radius=8, fg_color="#1DBD73")
         self.button_4.grid(row=0, column=1, padx=10, pady=15)
 
-        self.button_5 = ctk.CTkButton(button_container, text="Cancel", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.destroy())
+        self.button_5 = ctk.CTkButton(button_container, text="Cancel", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.destroy(), text_color="white")
         self.button_5.configure(width=135, height=38, corner_radius=8, fg_color="#E73B3C")
         self.button_5.grid(row=0, column=2, padx=10, pady=15)
 
@@ -392,5 +389,3 @@ class InputGame(ctk.CTkToplevel):
     def iconbitmap(self, bitmap):
         self._iconbitmap_method_called = False
         super().wm_iconbitmap(resource_path('assets/icon/window_icon.ico'))
-
-    

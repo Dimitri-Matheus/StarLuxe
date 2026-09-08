@@ -63,9 +63,9 @@ class AppFrame(ctk.CTkFrame):
 
         # Load Variables
         self.xxmi_var = ctk.BooleanVar(value=self.settings["Launcher"]["xxmi_feature_enabled"])
+        self.model_importer_var = ctk.BooleanVar(value=self.settings["Launcher"].get("model_importer_enabled", False))
         self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
         self.addon_var = ctk.BooleanVar(value=self.settings["Launcher"]["reshade_feature_enabled"])
-        self.model_importer_var = ctk.BooleanVar(value=self.settings["Launcher"].get("model_importer_enabled", False))
         self.dxvk_var = ctk.BooleanVar(value=self.settings["Launcher"]["direct_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
         self.theme_var = ctk.StringVar(value=self.settings["Launcher"]["gui_theme"])
@@ -86,6 +86,7 @@ class AppFrame(ctk.CTkFrame):
             "4. Edit and replace images as needed. (Supported image: .png, .jpg, .jpeg).\n"
             "Save your changes and restart the app to apply them."
         ))
+
         # Appearance Mode
         self.appearance_var = ctk.StringVar(value=self.settings["Launcher"].get("appearance_mode", "System"))
         
@@ -127,15 +128,14 @@ class AppFrame(ctk.CTkFrame):
             "Do not recommend using addons in online games!"
         ))
 
-        
-        self.switch_importer = ctk.CTkSwitch(self, text="Model Importer", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
-        self.switch_importer.configure(switch_width=36, switch_height=20, variable=self.model_importer_var)
-        self.switch_importer.grid(row=6, column=0, padx=25, pady=(10, 5), sticky="w")
-        StyledToolTip(self.switch_importer, message = (
-            "Enabled: Injects 3D Model Importer (GIMI, SRMI, etc.) alongside ReShade.\n"
-            "Disabled: Starts without the Model Importer."
+        self.switch_model_importer = ctk.CTkSwitch(self, text="Model Importer", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
+        self.switch_model_importer.configure(switch_width=36, switch_height=20, variable=self.model_importer_var)
+        self.switch_model_importer.grid(row=6, column=0, padx=25, pady=(10, 5), sticky="w")
+        StyledToolTip(self.switch_model_importer, message = (
+            "Enabled: Enables loading custom 3D models via GIMI/SRMI/WWMI/ZZMI/EFMI.\n"
+            "Disabled: Plays the game without custom models.\n"
+            "Experimental!!!"
         ))
-        # ------------------------------------------
 
         self.switch_update = ctk.CTkSwitch(self, text="Check for updates", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_update.configure(switch_width=36, switch_height=20, variable=self.update_var)
@@ -148,16 +148,16 @@ class AppFrame(ctk.CTkFrame):
 
         # XXMI Path
         self.config_file = ctk.CTkLabel(self, text="Configuration File", font=ctk.CTkFont(size=18))
-        self.config_file.grid(row=8, column=0, padx=25, pady=(15, 5), sticky="w") 
+        self.config_file.grid(row=8, column=0, padx=25, pady=(15, 5), sticky="w")
 
         self.xxmi_settings = ctk.CTkEntry(self, placeholder_text="C:/Path/to/XXMI Launcher Config.json", font=ctk.CTkFont(family="Verdana", size=14))
         self.xxmi_settings.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
-        self.xxmi_settings.grid(row=9, column=0, padx=25, pady=5, sticky="w") 
+        self.xxmi_settings.grid(row=9, column=0, padx=25, pady=5, sticky="w")
         StyledToolTip(self.xxmi_settings, message = "Usually located in the \"XXMI Launcher folder\" or \"AppData\\Roaming\\XXMI Launcher\".")
 
         self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.xxmi_settings))
         self.browser_button.configure(width=123, height=38, corner_radius=8, state="disabled", fg_color="#222222")
-        self.browser_button.grid(row=9, column=1, padx=(0, 20), pady=5, sticky="w") 
+        self.browser_button.grid(row=9, column=1, padx=(0, 20), pady=5, sticky="w")
 
         self.switch_toogle_xxmi()
 
@@ -228,7 +228,8 @@ class SettingsDialog(ctk.CTkToplevel):
 
         self.button_6 = ctk.CTkButton(button_content_frame, text="Open Folder", font=ctk.CTkFont(size=18), command=lambda: self.open_install_folder())
         self.button_6.configure(width=0, height=0, fg_color="transparent", text_color=("gray10", "white"), hover_color=ThemeManager.get_custom_color("accent_color"))
-        self.button_6.grid(row=0, column=2,  sticky="w")
+        self.button_6.grid(row=0, column=2, sticky="w")
+
     def save_path(self, path_entries: dict[str, ctk.CTkEntry]):
         errors = []
 
@@ -237,7 +238,7 @@ class SettingsDialog(ctk.CTkToplevel):
         direct_enabled = self.app_content_frame.dxvk_var.get()
         update_enabled = self.app_content_frame.update_var.get()
         theme_options = self.app_content_frame.theme_var.get()
-        appearance_options = self.app_content_frame.appearance_var.get() 
+        appearance_options = self.app_content_frame.appearance_var.get()
         xxmi_config_path = self.app_content_frame.xxmi_settings.get().strip()
         model_importer_enabled = self.app_content_frame.model_importer_var.get()
 
@@ -247,7 +248,7 @@ class SettingsDialog(ctk.CTkToplevel):
         self.settings["Launcher"]["direct_feature_enabled"] = direct_enabled
         self.settings["Launcher"]["model_importer_enabled"] = model_importer_enabled
         
-        
+       
         self.settings["Launcher"]["appearance_mode"] = appearance_options
         ctk.set_appearance_mode(appearance_options) 
         # ----------------------------------------

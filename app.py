@@ -36,7 +36,7 @@ from gui.widgets import StyledToolTip, StyledPopup
 
 logger = logging.getLogger(__name__)
 
-# Animations
+# --- ADAPTIVE IMAGE FUNCTION (Light/Dark Mode Support) ---
 def get_adaptive_image(path: str, size: tuple):
     if not path or not os.path.exists(path):
         return None
@@ -51,8 +51,9 @@ def get_adaptive_image(path: str, size: tuple):
     except Exception as e:
         logger.error(f"Failed to load image: {e}")
         return None
-# --------------------------------------
+# ---------------------------------------------------------
 
+# Animations
 class FadeInLabel(ctk.CTkLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -91,7 +92,6 @@ class Image_Frame(ctk.CTkFrame):
         super().__init__(master, width=256, height=256)
         self.current_theme = theme_name
         
-        
         default_path = resource_path("themes/Default/MainFrame/logo-app.png")
         self.default_image = self.process_image(default_path, ThemeManager.get_image_size("Default"))
 
@@ -100,7 +100,7 @@ class Image_Frame(ctk.CTkFrame):
 
     def process_image(self, path, size: tuple = None):
         image_size = size or ThemeManager.get_image_size(self.current_theme)
-        return get_adaptive_image(path, image_size) #
+        return get_adaptive_image(path, image_size)
 
     def update_image(self, new_image, size: tuple = None):
         image = self.process_image(new_image, size)
@@ -125,7 +125,10 @@ class Starluxe(ctk.CTk):
         self.resizable(width=False, height=False)
         
         self.settings = settings
-        ctk.set_appearance_mode(self.settings["Launcher"].get("appearance_mode", "System"))
+        
+        
+        appearance = self.settings["Launcher"].get("appearance_mode", "Dark")
+        ctk.set_appearance_mode(appearance)
 
         # Container
         self.container = ctk.CTkFrame(self)

@@ -45,6 +45,7 @@ class StyledPopup(CTkMessagebox):
             "justify": "center",
             "wraplength": 300,
             "border_width": 0,
+            "text_color": "white" # Force white text to ensure readability on gray14 background
         }
 
         default_style.update(kwargs)
