@@ -219,7 +219,7 @@ class ReshadeSetup():
     
     def xxmi_integration(self, game_code):
         if not self.xxmi_enabled:
-            logger.info(f"XXMI Integration inactive")
+            logger.info("XXMI Integration inactive")
             return
 
         IMPORTER_MAP = {
@@ -252,6 +252,10 @@ class ReshadeSetup():
 
         config_json = root / "XXMI Launcher Config.json"
         mount_path = root / importer_key / "d3d11.dll"
+        if not mount_path.is_file():
+            logger.error(f"XXMI mount point not found: {mount_path}")
+            return
+    
         if config_json.is_file():
             try:
                 libraries = f"{self.reshade_dll}\n{mount_path}"

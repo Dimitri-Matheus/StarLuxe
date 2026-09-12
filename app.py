@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.95'
+# nuitka-project: --product-version='1.0.96'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
