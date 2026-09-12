@@ -31,7 +31,7 @@ default = {
         "reshade_dxvk": "script/dxgi.dll",
         "reshade_config": "script/ReShade64.json",
         "reshade_xr_config": "script/ReShade64_XR.json",
-        "xxmi_file": ""
+        "xxmi_dir": ""
     },
     "Games": {
         "genshin_impact": {
@@ -151,6 +151,10 @@ def delete_config():
             config_path.unlink()
     except Exception as e:
         print(f"Failed to delete the configuration file: {e}")
+
+
+def get_default_games() -> set:
+    return set(default.get("Games", {}).keys())
 
 
 #! Test functions

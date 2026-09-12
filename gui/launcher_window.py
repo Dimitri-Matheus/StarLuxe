@@ -5,9 +5,9 @@ from tkinter import filedialog
 import customtkinter as ctk
 import PIL.Image, PIL.ImageTk
 from pathlib import Path
-import logging, re, math, shutil
+import logging, re, math, shutil, subprocess
 from CTkMenuBar import CustomDropdownMenu
-from utils.config import save_config
+from utils.config import save_config, get_default_games
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
 from .widgets import StyledToolTip, StyledPopup
@@ -124,7 +124,6 @@ class LauncherDialog(ctk.CTkToplevel):
         setup.verify_installation()
         setup.addon_support()
         setup.dxvk_support()
-        setup.xxmi_integration(game_code)
 
         result = setup.inject_game()
         self.destroy()
@@ -152,6 +151,7 @@ class GamePage(ctk.CTkFrame):
         self.grid_columnconfigure((1, 2, 3), weight=0)
         self.grid_rowconfigure((0, 3), weight=1)
 
+        default = get_default_games()
         for j, (game_id, game_data) in enumerate(self.page_games, start=1):
             name = game_data.get("display_name", game_id).replace("_", " ").title()
             img_1 = ctk.CTkImage(PIL.Image.open(resource_path(game_data.get("icon_path", ""))), size=(128, 128))
@@ -166,18 +166,30 @@ class GamePage(ctk.CTkFrame):
             context_menu = CustomDropdownMenu(master=self.controller, widget=launch_button, font=ctk.CTkFont(family="Verdana",size=12))
             context_menu.configure(border_color="gray20", border_width=1)
 
-            
+            context_menu.add_option("Open Folder", command=lambda gid=game_id: self.open_folder_game(gid))
             context_menu.add_option("Edit", command=lambda gid=game_id: self.controller.open_modal(gid))
-            context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
+            if game_id not in default:
+                context_menu.add_option("Remove", command=lambda gid=game_id: self.remove_game(gid))
             context_menu.add_separator()
             context_menu.add_option("Uninstall ReShade", command=lambda gid=game_id: self.remove_reshade(gid))
-            # Change to "Manage ReShade"
 
             launch_button.bind("<Button-3>", lambda event, menu=context_menu: menu._show())
             launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
             StyledToolTip(launch_button, message="Right-click to manage this item")
-            #else:
-                #launch_button.configure(command=lambda gid=game_id: self.controller.open_game(gid))
+
+    def open_folder_game(self, game_id: str):
+        game_data = self.controller.settings["Games"][game_id]
+        folder = game_data.get("folder", "").strip()
+
+        if not folder:
+            StyledPopup(message="Please set the game folder first in Settings")
+            return
+
+        folder_path = Path(folder).resolve()
+        try:
+            subprocess.Popen(["explorer", str(folder_path)])
+        except Exception as e:
+            logger.error(f"Failed to open folder: {e}")
 
     def remove_game(self, game_id: str):
         msbox_remove = StyledPopup(title="Warning", message="Do you really want to remove this game?", option_1="Ok", option_2="Cancel")
@@ -186,7 +198,7 @@ class GamePage(ctk.CTkFrame):
         path = self.controller.settings["Games"][game_id].get("icon_path")
         full_path = Path(resource_path(path)).resolve()
 
-        if full_path.name != "empty.png":
+        if full_path.name != "placeholder.png":
             full_path.unlink()
             logger.info(f"Icon file '{full_path.name}' removed successfully!")
         else:

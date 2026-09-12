@@ -42,7 +42,7 @@ class ReshadeSetup():
         self.reshade_config = relative_path(self.script_config.get("reshade_config"))
         self.reshade_xr_config = relative_path(self.script_config.get("reshade_xr_config"))
 
-        self.xxmi_src = relative_path(self.script_config.get("xxmi_file"))
+        self.xxmi_src = relative_path(self.script_config.get("xxmi_dir"))
         self.download_src = relative_path(self.package_config.get("download_dir"))
         self.reshade_enabled = self.launcher_config.get("reshade_feature_enabled")
         self.direct_enabled = self.launcher_config.get("direct_feature_enabled")
@@ -88,19 +88,20 @@ class ReshadeSetup():
             ]
         
         if self.xxmi_enabled:
-            validation_items.append(("XXMI Launcher Config", self.xxmi_src, "xxmi"))
+            validation_items.append(("XXMI Launcher", self.xxmi_src, "xxmi"))
 
         try:
             for name, path, item in validation_items:
-                exists = path.is_file() if item != "dir" else path.is_dir()
+                exists = path.is_dir() if item in ["dir", "xxmi"] else path.is_file()
+                xxmi_exists = (self.xxmi_src / "Resources" / "Bin" / "XXMI Launcher.exe").is_file() or (self.xxmi_src / "XXMI Launcher.exe").is_file()
 
                 if not exists:
                     logger.error(f"Missing required {name}: {path}")
                     raise FileNotFoundError(f"{name} not found!")
-                
-                if item == "xxmi" and path.name != "XXMI Launcher Config.json":
+
+                if item == "xxmi" and not xxmi_exists:
                     logger.error(f"Invalid XXMI file name: {path.name}")
-                    raise FileNotFoundError("Please select XXMI Launcher Config.json")
+                    raise FileNotFoundError("Please select XXMI Launcher Folder")
 
         except Exception as e:
             return {
@@ -172,15 +173,19 @@ class ReshadeSetup():
             }
             
         try:
-            args = [str(self.exe_path)]
-            if self.direct_enabled:
-                args.append("-force-d3d11")
+            self.xxmi_integration(self.game_code)
+            if not self.xxmi_enabled:
+                args = [str(self.exe_path)]
+                if self.direct_enabled:
+                    args.append("-force-d3d11")
 
-            reshade_env = os.environ.copy()
-            reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"
+                reshade_env = os.environ.copy()
+                reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"
 
-            subprocess.Popen(args, cwd=str(self.game_dir), env=reshade_env)
-            logger.info(f"Waiting for {self.exe_path.name} to start...")
+                subprocess.Popen(args, cwd=str(self.game_dir), env=reshade_env)
+                logger.info(f"Started {self.exe_path.name} manually")
+            else:
+                logger.info(f"Waiting for XXMI to launch {self.exe_path.name}...")
 
             start = time.time()
             process_name = None
@@ -232,29 +237,45 @@ class ReshadeSetup():
 
         logger.info(f"Mapping for {game_code} successfully found!")
 
-        xxmi_root = Path(self.xxmi_src).parent
-        mount_path = xxmi_root / importer_key / "d3d11.dll"
-        if mount_path.exists():
-            logger.info(f"XXMI mount point already exists: {mount_path}")
+        xxmi_root = Path(self.xxmi_src)
+        xxmi_base = xxmi_root / "Resources" / "Bin" / "XXMI Launcher.exe"
+        xxmi_direct = xxmi_root / "XXMI Launcher.exe"
+        if xxmi_base.is_file():
+            root = xxmi_root
+            launcher_exe = xxmi_base
+        elif xxmi_direct.is_file():
+            root = xxmi_root.parent.parent
+            launcher_exe = xxmi_direct
         else:
-            logger.error(f"XXMI d3d11.dll not found for {importer_key} in any known location!")
+            logger.error(f"XXMI Launcher not found {launcher_exe}")
             return
 
+        config_json = root / "XXMI Launcher Config.json"
+        mount_path = root / importer_key / "d3d11.dll"
+        if config_json.is_file():
+            try:
+                libraries = f"{self.reshade_dll}\n{mount_path}"
+                with open(config_json, "r+", encoding="utf-8") as f:
+                    config_data = json.load(f)
+                    importer_settings = config_data["Importers"][importer_key]["Importer"]
+                    importer_settings["extra_libraries_enabled"] = True
+                    importer_settings["extra_libraries"] = libraries
+
+                    f.seek(0)
+                    json.dump(config_data, f, indent=4)
+                    f.truncate()
+
+                logger.info("XXMI configuration file updated successfully!")
+
+            except Exception as e:
+                logger.error(f"Failed to patch XXMI config: {e}")
+        else:
+            logger.error(f"XXMI Config JSON not found at {config_json}")
+
         try:
-            libraries = f"{self.reshade_dll}\n{mount_path}"
-            with open(self.xxmi_src, "r+", encoding="utf-8") as f:
-                config_data = json.load(f)
-
-                importer_settings = config_data["Importers"][importer_key]["Importer"]
-                importer_settings["extra_libraries_enabled"] = True
-                importer_settings["extra_libraries"] = libraries
-
-                f.seek(0)
-                json.dump(config_data, f, indent=4)
-                f.truncate()
-            
-            logger.info("XXMI configuration file updated successfully!")
-
+            args = [str(launcher_exe), "--nogui", "--xxmi", importer_key]
+            subprocess.Popen(args, cwd=str(launcher_exe.parent))
+            logger.info(f"XXMI Launcher started with importer {importer_key}")
         except Exception as e:
             logger.error(e)
 

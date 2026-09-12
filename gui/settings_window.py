@@ -33,7 +33,7 @@ class GamePathFrame(ctk.CTkFrame):
             path_entry.grid(row=i*2 + 1, column=0, padx=20, pady=5, sticky="w")
             StyledToolTip(path_entry, message=(
                 f"Path to folder with \"{name}.exe\" and related subfolders.\n"
-                "🔍 Open HoYoPlay/WuWa Launcher → Game Settings → Game Directory."
+                "🔍 Open HoYoPlay/Native Launcher → Game Settings → Game Directory."
             ))
 
             folder_path = self.settings["Games"][game_id].get("folder", "")
@@ -63,7 +63,7 @@ class AppFrame(ctk.CTkFrame):
 
         # Load Variables
         self.xxmi_var = ctk.BooleanVar(value=self.settings["Launcher"]["xxmi_feature_enabled"])
-        self.xxmi_file_path = self.settings["Script"]["xxmi_file"]
+        self.xxmi_file_path = self.settings["Script"]["xxmi_dir"]
         self.addon_var = ctk.BooleanVar(value=self.settings["Launcher"]["reshade_feature_enabled"])
         self.dxvk_var = ctk.BooleanVar(value=self.settings["Launcher"]["direct_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
@@ -96,7 +96,7 @@ class AppFrame(ctk.CTkFrame):
         StyledToolTip(self.switch_xxmi, message = (
             "Enabled: Integrates ReShade settings with the XXMI Launcher.\n"
             "Disabled: Leaves the XXMI Launcher unchanged.\n"
-            "Attention: The XXMI Launcher needs to be opened at least once!"
+            "Attention: Open the XXMI Launcher and game once to create the required files!"
         ))
 
         self.switch_dxvk = ctk.CTkSwitch(self, text="DirectX", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
@@ -127,33 +127,33 @@ class AppFrame(ctk.CTkFrame):
         ))
 
         # XXMI Path
-        self.config_file = ctk.CTkLabel(self, text="Configuration File", font=ctk.CTkFont(size=18))
+        self.config_file = ctk.CTkLabel(self, text="XXMI Launcher Path", font=ctk.CTkFont(size=18))
         self.config_file.grid(row=7, column=0, padx=25, pady=(15, 5), sticky="w")
 
-        self.xxmi_settings = ctk.CTkEntry(self, placeholder_text="C:/Path/to/XXMI Launcher Config.json", font=ctk.CTkFont(family="Verdana", size=14))
-        self.xxmi_settings.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
-        self.xxmi_settings.grid(row=8, column=0, padx=25, pady=5, sticky="w")
-        StyledToolTip(self.xxmi_settings, message = "Usually located in the \"XXMI Launcher folder\" or \"AppData\\Roaming\\XXMI Launcher\".")
+        self.xxmi_path = ctk.CTkEntry(self, placeholder_text="C:/Path/to/XXMI Launcher", font=ctk.CTkFont(family="Verdana", size=14))
+        self.xxmi_path.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
+        self.xxmi_path.grid(row=8, column=0, padx=25, pady=5, sticky="w")
+        StyledToolTip(self.xxmi_path, message = "Usually located in the \"AppData/Roaming/XXMI Launcher/Resources/Bin/\" or \"AppData/Roaming/XXMI Launcher/\".")
 
-        self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.xxmi_settings))
+        self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.xxmi_path))
         self.browser_button.configure(width=123, height=38, corner_radius=8, state="disabled", fg_color="#222222")
         self.browser_button.grid(row=8, column=1, padx=(0, 20), pady=5, sticky="w")
 
         self.switch_toogle_xxmi()
-
+    
     def switch_toogle_xxmi(self):
         if self.xxmi_var.get():
-            self.xxmi_settings.configure(state="normal", fg_color="#515151", border_color="#515151")
+            self.xxmi_path.configure(state="normal", fg_color="#515151", border_color="#515151")
             self.browser_button.configure(state="normal", fg_color=ThemeManager.get_custom_color("accent_color"))
-            file_path = self.settings["Script"].get("xxmi_file", "")
+            file_path = self.settings["Script"].get("xxmi_dir", "")
             if file_path:
-                self.xxmi_settings.insert(0, file_path)
+                self.xxmi_path.insert(0, file_path)
         else:
-            self.xxmi_settings.configure(state="disabled", fg_color="#333333", border_color="#333333")
+            self.xxmi_path.configure(state="disabled", fg_color="#333333", border_color="#333333")
             self.browser_button.configure(state="disabled", fg_color="#222222")
 
     def select_file(self, widget):
-        filename = filedialog.askopenfilename(parent=self, title="Open XXMI Settings", initialdir="/", defaultextension=".json", filetypes=[("JSON files","*.json"), ("All files", "*.*")])
+        filename = filedialog.askdirectory(title='Open folder', initialdir='/')
         if filename:
             self.xxmi_file_path = filename
             widget.delete(0, "end")
@@ -218,9 +218,9 @@ class SettingsDialog(ctk.CTkToplevel):
         direct_enabled = self.app_content_frame.dxvk_var.get()
         update_enabled = self.app_content_frame.update_var.get()
         theme_options = self.app_content_frame.theme_var.get()
-        xxmi_config_path = self.app_content_frame.xxmi_settings.get().strip()
+        xxmi_config_path = self.app_content_frame.xxmi_path.get().strip()
 
-        self.settings["Script"]["xxmi_file"] = xxmi_config_path
+        self.settings["Script"]["xxmi_dir"] = xxmi_config_path
         self.settings["Launcher"]["reshade_feature_enabled"] = reshade_enabled
         self.settings["Launcher"]["auto_check_update"] = update_enabled
         self.settings["Launcher"]["direct_feature_enabled"] = direct_enabled
