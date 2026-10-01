@@ -10,7 +10,7 @@
 # nuitka-project: --windows-icon-from-ico=assets/icon/favicon.ico
 
 # Metadata
-# nuitka-project: --product-version='1.0.96'
+# nuitka-project: --product-version='1.0.97'
 # nuitka-project: --company-name='Dimit'
 # nuitka-project: --product-name='Starluxe'
 # nuitka-project: --file-description='StarLuxe Launcher'
@@ -401,11 +401,8 @@ if __name__ == "__main__":
         if msbox_update.get() == "Update now":
             download_update(result_update["url"])
 
-    #! Hard‑Coded
     if not result_system["status"]:
-        msg = result_system["message"].strip().lower()
-
-        if msg.count("shaders folder not found!") == 1:
+        if result_system.get("error_type") == "shaders":
             def download_task(progress_callback):
                 return download_dependencies(settings["Packages"]["download_dir"], progress_callback)
             DownloadDialog(app, "Downloading Dependencies", True, download_task)

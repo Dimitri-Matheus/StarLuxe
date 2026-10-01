@@ -38,31 +38,36 @@ default = {
             "icon_path": "assets/games/GI.png",
             "folder": "",
             "exe": "GenshinImpact.exe",
-            "subpath": ""
+            "subpath": "",
+            "arguments": ""
         },
         "honkai_star_rail": {
             "icon_path": "assets/games/HSR.png",
             "folder": "",
             "exe": "StarRail.exe",
-            "subpath": ""
+            "subpath": "",
+            "arguments": "",
         },
         "wuthering_waves": {
             "icon_path": "assets/games/WuWa.png",
             "folder": "",
             "exe": "Client-Win64-Shipping.exe",
-            "subpath":  "Client/Binaries/Win64"
+            "subpath":  "Client/Binaries/Win64",
+            "arguments": "-krqlv=HD"
         },
         "zenless_zone_zero": {
             "icon_path": "assets/games/ZZZ.png",
             "folder": "",
             "exe": "ZenlessZoneZero.exe",
-            "subpath": ""
+            "subpath": "",
+            "arguments": "",
         },
         "arknights_endfield": {
             "icon_path": "assets/games/AKE.png",
             "folder": "",
             "exe": "Endfield.exe",
-            "subpath": ""
+            "subpath": "",
+            "arguments": ""
         },
     }
 }

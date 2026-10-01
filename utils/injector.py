@@ -1,6 +1,6 @@
 """Utils for all related to Reshade injection logic"""
 
-import psutil, shutil, subprocess, logging, json, hashlib, time, configparser, os
+import psutil, shutil, subprocess,logging,json, hashlib, time, configparser, os, shlex
 from pathlib import Path
 from pymem import Pymem
 from pymem.process import inject_dll_from_path
@@ -95,6 +95,10 @@ class ReshadeSetup():
                 exists = path.is_dir() if item in ["dir", "xxmi"] else path.is_file()
                 xxmi_exists = (self.xxmi_src / "Resources" / "Bin" / "XXMI Launcher.exe").is_file() or (self.xxmi_src / "XXMI Launcher.exe").is_file()
 
+                if item == "dir" and exists and not any(path.iterdir()):
+                    logger.warning(f"{name} exists but is empty: {path}")
+                    exists = False
+
                 if not exists:
                     logger.error(f"Missing required {name}: {path}")
                     raise FileNotFoundError(f"{name} not found!")
@@ -107,7 +111,7 @@ class ReshadeSetup():
             return {
                 "status": False,
                 "message": str(e),
-                "error_type": "system"
+                "error_type": "shaders" if "Shaders folder" in str(e) else "system"
             }
 
         logger.info(f"All system files have been successfully verified!")
@@ -178,6 +182,10 @@ class ReshadeSetup():
                 args = [str(self.exe_path)]
                 if self.direct_enabled:
                     args.append("-force-d3d11")
+
+                game_args = self.game_info.get("arguments", "")
+                if game_args:
+                    args.extend(shlex.split(game_args))
 
                 reshade_env = os.environ.copy()
                 reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"

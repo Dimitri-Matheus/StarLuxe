@@ -212,6 +212,8 @@ class GamePage(ctk.CTkFrame):
     def remove_reshade(self, game_id: str):
         game_data = self.controller.settings["Games"][game_id]
         folder = game_data.get("folder", "").strip()
+        subpath = game_data.get("subpath", "").strip()
+        install_dir = Path(folder) / subpath
 
         if not folder:
             StyledPopup(message="Please set the game folder first in Settings")
@@ -224,7 +226,7 @@ class GamePage(ctk.CTkFrame):
         files = ["ReShade.ini", "ReShade.log", "reshade-shaders", "Presets"]
         removed = []
         for item in files:
-            object_path = Path(folder) / item
+            object_path = install_dir / item
             if object_path.exists() or object_path.is_symlink():
                 try:
                     if object_path.is_symlink():
@@ -259,70 +261,91 @@ class InputGame(ctk.CTkToplevel):
         self.geometry("520x480")
         self.resizable(width=False, height=False)
         self.grab_set()
-        r = 0
 
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
         self.grid_columnconfigure(0, weight=1)
-        self.grid_columnconfigure(1, weight=0)
+
+        scrollable_frame = ctk.CTkScrollableFrame(self)
+        scrollable_frame.grid(row=0, column=0, sticky="nsew")
+        scrollable_frame.grid_columnconfigure(0, weight=1)
+        scrollable_frame.grid_columnconfigure(1, weight=0)
+
+        r = 0
 
         # Container 1
         self.icon_image = resource_path("assets/icon/placeholder.png")
         self.icon = ctk.CTkImage(PIL.Image.open(self.icon_image), size=(128, 128))
-        self.icon_preview = ctk.CTkLabel(self, text="", image=self.icon)
+        self.icon_preview = ctk.CTkLabel(scrollable_frame, text="", image=self.icon)
         self.icon_preview.grid(row=r, column=0, columnspan=2, pady=30, sticky="ew"); r += 1
 
-        self.text_1 = ctk.CTkLabel(self, text="Display name", font=ctk.CTkFont(size=18))
+        self.text_1 = ctk.CTkLabel(scrollable_frame, text="Display name", font=ctk.CTkFont(size=18))
         self.text_1.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
-        self.name_input = ctk.CTkEntry(self, placeholder_text="Enter game name", font=ctk.CTkFont(family="Verdana", size=14))
-        self.name_input.configure(width=478, height=38, corner_radius=8)
+        self.name_input = ctk.CTkEntry(scrollable_frame, placeholder_text="Enter game name", font=ctk.CTkFont(family="Verdana", size=14))
+        self.name_input.configure(width=300, height=38, corner_radius=8)
         self.name_input.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
         StyledToolTip(self.name_input, message="The name will update automatically after selecting the executable.")
 
-        self.icon_button = ctk.CTkButton(self, text="Choose Icon", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_icon())
+        self.icon_button = ctk.CTkButton(scrollable_frame, text="Choose Icon", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_icon())
         self.icon_button.configure(width=123, height=38, corner_radius=8)
         self.icon_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
         StyledToolTip(self.icon_button, message=(
             "Select and update the default icon:\n"
-            "1. Choose an image in a compatible format (PNG, JPG, etc.).\n" 
+            "1. Choose an image in a compatible format (PNG, JPG, etc.).\n"
             "2. Recommended size: 128x128 pixels."
         ))
 
-        self.text_2 = ctk.CTkLabel(self, text="Game Executable", font=ctk.CTkFont(size=18))
+        self.text_2 = ctk.CTkLabel(scrollable_frame, text="Game Executable", font=ctk.CTkFont(size=18))
         self.text_2.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
-        self.path_entry = ctk.CTkEntry(self, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
-        self.path_entry.configure(width=478, height=38, corner_radius=8)
+        self.path_entry = ctk.CTkEntry(scrollable_frame, placeholder_text="C:/Games...", font=ctk.CTkFont(family="Verdana", size=14))
+        self.path_entry.configure(width=300, height=38, corner_radius=8)
         self.path_entry.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
         StyledToolTip(self.path_entry, message=(
             "Path to the folder containing the selected game's executable.\n"
             "Note: Make sure to select the correct .exe file."
         ))
 
-        self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
+        self.browser_button = ctk.CTkButton(scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
         self.browser_button.configure(width=123, height=38, corner_radius=8)
         self.browser_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
 
+        self.text_3 = ctk.CTkLabel(scrollable_frame, text="Launcher Arguments (Optional)", font=ctk.CTkFont(size=18))
+        self.text_3.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+
+        self.launcher_args = ctk.CTkEntry(scrollable_frame, placeholder_text="...", font=ctk.CTkFont(family="Verdana", size=14))
+        self.launcher_args.configure(height=38, corner_radius=8)
+        self.launcher_args.grid(row=r, column=0, padx=25, pady=5, sticky="ew", columnspan=2)
+        StyledToolTip(self.launcher_args, message=(
+            "Enter specific parameters or options to use when starting the game.\n"
+            "Example: -fullscreen -novsync"
+        ))
+
         # Container 2
         button_container = ctk.CTkFrame(self, fg_color="transparent")
-        button_container.grid(row=r, column=0, columnspan=2, pady=20, sticky="ew")
+        button_container.grid(row=1, column=0, padx=20, pady=(10, 18), sticky="ew")
         button_container.grid_columnconfigure((0, 3), weight=1)
         button_container.grid_columnconfigure((1, 2), weight=0)
 
         self.button_4 = ctk.CTkButton(button_container, text="Ok", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.save_game())
         self.button_4.configure(width=135, height=38, corner_radius=8, fg_color="#1DBD73")
-        self.button_4.grid(row=0, column=1, padx=10, pady=15)
+        self.button_4.grid(row=0, column=1, padx=10)
 
         self.button_5 = ctk.CTkButton(button_container, text="Cancel", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.destroy())
         self.button_5.configure(width=135, height=38, corner_radius=8, fg_color="#E73B3C")
-        self.button_5.grid(row=0, column=2, padx=10, pady=15)
+        self.button_5.grid(row=0, column=2, padx=10)
 
         if self.game_edit is not None:
             self.title("Edit Game")
             game_data = self.settings["Games"].get(self.game_edit, {})
+            full_exe = Path(game_data.get("folder")) / game_data.get("subpath", "") / game_data.get("exe")
             loaded_icon = ctk.CTkImage(PIL.Image.open(resource_path(game_data.get("icon_path"))), size=(128, 128))
             self.icon_preview.configure(image=loaded_icon)
             self.name_input.insert(0, game_data.get("display_name", game_edit.replace("_", " ").title()))
-            self.path_entry.insert(0, str(Path(game_data.get("folder")) / game_data.get("exe")))
+            self.path_entry.insert(0, str(full_exe))
+            if game_data.get("arguments"):
+                self.launcher_args.insert(0, game_data.get("arguments"))
             logger.info("Data loaded successfully!")
 
     def select_file(self, path, name):
@@ -352,9 +375,14 @@ class InputGame(ctk.CTkToplevel):
         game_name = re.sub(r'(?<=[a-z])(?=[A-Z])|[^a-zA-Z]', ' ', self.name_input.get()).replace(' ', '_').strip("_").lower()
         game_base = self.path_entry.get().strip()
         game_folder = Path(game_base)
+        game_args = self.launcher_args.get().strip()
 
-        if any([not game_base, not game_name, not game_folder.is_file(), game_folder.suffix.lower() != ".exe"]):
+        if not game_name:
             StyledPopup(message="Please fill in all required fields")
+            return
+
+        if any([not game_base, not game_folder.is_file(), game_folder.suffix.lower() != ".exe"]):
+            StyledPopup(message="Please select a valid .exe file")
             return
         
         if game_name in self.settings["Games"] and game_name != self.game_edit:
@@ -375,14 +403,27 @@ class InputGame(ctk.CTkToplevel):
                 logger.info(f"Icon copied to: {dest_folder}")
             except Exception:
                 logger.exception("Failed to copy new icon!")
+            
         elif self.game_edit:
             icon_save = self.settings["Games"].get(self.game_edit, {}).get("icon_path", "assets/icon/placeholder.png")
+
+        current_data = self.settings["Games"].get(self.game_edit, {}) if self.game_edit else {}
+        current_folder = current_data.get("folder", "").strip()
+
+        if current_folder and game_folder.is_relative_to(Path(current_folder)):
+            game_root = Path(current_folder)
+            rel = game_folder.parent.relative_to(game_root)
+            subpath = "" if str(rel) == "." else rel.as_posix()
+        else:
+            game_root = game_folder.parent
+            subpath = ""
         
         settings_data =  {
             "icon_path": str(icon_save),
-            "folder": str(game_folder.parent),
+            "folder": str(game_root),
             "exe": str(game_folder.name),
-            "subpath": ""
+            "subpath": subpath,
+            "arguments": str(game_args)
         }
         games = self.settings.setdefault("Games", {})
 
