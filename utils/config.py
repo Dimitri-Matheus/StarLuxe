@@ -10,6 +10,7 @@ default = {
     "Launcher": {
         "auto_check_update": True,
         "gui_theme": "Default",
+        "keybind": "Insert",
         "last_played_game": "",
         "xxmi_feature_enabled": False,
         "direct_feature_enabled": False,

@@ -4,6 +4,7 @@ import psutil, shutil, subprocess,logging,json, hashlib, time, configparser, os,
 from pathlib import Path
 from pymem import Pymem
 from pymem.process import inject_dll_from_path
+from utils.keybind import KeyboardManager
 from utils.path import relative_path
 # from config import load_config
 
@@ -21,7 +22,6 @@ def get_filesystem(path: str) -> str:
         
     except Exception as e:
         logger.warning(f"Error detecting filesystem type: {e}")
-
 
 class ReshadeSetup():
     def __init__(self, settings: dict, game_path: str, xxmi_enabled: bool):
@@ -46,6 +46,7 @@ class ReshadeSetup():
         self.download_src = relative_path(self.package_config.get("download_dir"))
         self.reshade_enabled = self.launcher_config.get("reshade_feature_enabled")
         self.direct_enabled = self.launcher_config.get("direct_feature_enabled")
+        self.keybind = self.launcher_config.get("keybind")
 
     def verify_installation(self):
         try:
@@ -127,6 +128,7 @@ class ReshadeSetup():
         if not ini_dest.is_file():
             logger.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
+        KeyboardManager.apply_keybind(ini_dest, self.keybind)
 
         try:
             ini_file = configparser.ConfigParser()

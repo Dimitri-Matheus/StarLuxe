@@ -24,7 +24,7 @@
 from tkinter import *
 from tkinter import filedialog
 import customtkinter as ctk
-import PIL.Image, PIL.ImageTk
+import PIL.Image
 import logging, os, queue
 from utils.downloader import download_from_github, download_dependencies, check_for_updates, download_update, sync_metadata
 from utils.config import load_config, save_config
