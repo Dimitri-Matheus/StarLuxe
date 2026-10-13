@@ -128,7 +128,7 @@ class ReshadeSetup():
         if not ini_dest.is_file():
             logger.info(f"Copying ReShade.ini -> {ini_dest}")
             shutil.copy2(str(self.reshade_src), str(ini_dest))
-        KeyboardManager.apply_keybind(ini_dest, self.keybind)
+        KeyboardManager.apply_keybind(ini_dest, self.keybind.get("code"))
 
         try:
             ini_file = configparser.ConfigParser()

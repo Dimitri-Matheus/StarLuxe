@@ -8,7 +8,7 @@ from utils.config import save_config, delete_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
 from utils.theme import ThemeManager
-from utils.keybind import KeyboardManager
+from gui.keyboard_window import KeyboardDialog
 from .widgets import StyledToolTip, StyledPopup
 
 logger = logging.getLogger(__name__)
@@ -58,6 +58,7 @@ class AppFrame(ctk.CTkFrame):
     def __init__(self, master, settings: dict):
         super().__init__(master)
         self.settings = settings
+        self.modal = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
@@ -69,7 +70,8 @@ class AppFrame(ctk.CTkFrame):
         self.dxvk_var = ctk.BooleanVar(value=self.settings["Launcher"]["direct_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
         self.theme_var = ctk.StringVar(value=self.settings["Launcher"]["gui_theme"])
-        self.key_var = ctk.StringVar(value=self.settings["Launcher"]["keybind"])
+        self.key_var = ctk.StringVar(value=self.settings["Launcher"]["keybind"]["name"])
+        self.key_code_var = ctk.StringVar(value=self.settings["Launcher"]["keybind"]["code"])
 
         # Themes
         self.theme_subtitle = ctk.CTkLabel(self, text="Theme", font=ctk.CTkFont(size=18))
@@ -92,11 +94,10 @@ class AppFrame(ctk.CTkFrame):
         self.keybind_subtitle = ctk.CTkLabel(self, text="Menu Key", font=ctk.CTkFont(size=18))
         self.keybind_subtitle.grid(row=2, column=0, padx=25, pady=(15, 5), sticky="w")
 
-        keybinds = KeyboardManager.get_keybinds()
-        self.keybind_option = ctk.CTkOptionMenu(self, width=180, height=36, font=ctk.CTkFont(family="Verdana", size=14), dropdown_font=ctk.CTkFont(family="Verdana", size=12))
-        self.keybind_option.configure(values=keybinds, variable=self.key_var)
-        self.keybind_option.grid(row=3, column=0, padx=25, pady=5, sticky="w")
-        StyledToolTip(self.keybind_option, message="Select the key used to open the ReShade menu in-game.")
+        self.keybind_button = ctk.CTkButton(self, text="Change Key", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.open_modal())
+        self.keybind_button.configure(width=123, height=38, corner_radius=8)
+        self.keybind_button.grid(row=3, column=0, padx=25, pady=5, sticky="w")
+        StyledToolTip(self.keybind_button, message="The key used to open the ReShade menu in-game.")
 
         # Integration/Features
         self.integration_subtitle = ctk.CTkLabel(self, text="Integration/Features", font=ctk.CTkFont(size=18))
@@ -171,6 +172,12 @@ class AppFrame(ctk.CTkFrame):
             widget.delete(0, "end")
             widget.insert(0, filename)
 
+    def open_modal(self):
+        if self.modal is None or not self.modal.winfo_exists():
+            self.modal = KeyboardDialog(self, self.key_var, self.key_code_var)
+        else:
+            self.modal.focus()
+
 
 class SettingsDialog(ctk.CTkToplevel):
     def __init__(self, master, settings_load: dict, controller):
@@ -230,14 +237,15 @@ class SettingsDialog(ctk.CTkToplevel):
         direct_enabled = self.app_content_frame.dxvk_var.get()
         update_enabled = self.app_content_frame.update_var.get()
         theme_options = self.app_content_frame.theme_var.get()
-        keybind_options = self.app_content_frame.key_var.get()
         xxmi_config_path = self.app_content_frame.xxmi_path.get().strip()
+        keybind_name = self.app_content_frame.key_var.get()
+        keybind_code = self.app_content_frame.key_code_var.get()
 
         self.settings["Script"]["xxmi_dir"] = xxmi_config_path
         self.settings["Launcher"]["reshade_feature_enabled"] = reshade_enabled
         self.settings["Launcher"]["auto_check_update"] = update_enabled
         self.settings["Launcher"]["direct_feature_enabled"] = direct_enabled
-        self.settings["Launcher"]["keybind"] = keybind_options
+        self.settings["Launcher"]["keybind"] = {"name": keybind_name, "code": keybind_code}
 
         if self.settings["Launcher"]["gui_theme"] != theme_options:
             self.settings["Launcher"]["gui_theme"] = theme_options
