@@ -10,6 +10,10 @@ default = {
     "Launcher": {
         "auto_check_update": True,
         "gui_theme": "Default",
+        "keybind": {
+            "name": "Insert",
+            "code": "45,0,0,0"
+        },
         "last_played_game": "",
         "xxmi_feature_enabled": False,
         "direct_feature_enabled": False,

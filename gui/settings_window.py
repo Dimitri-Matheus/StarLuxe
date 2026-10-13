@@ -8,6 +8,7 @@ from utils.config import save_config, delete_config
 from utils.path import resource_path
 from utils.injector import ReshadeSetup
 from utils.theme import ThemeManager
+from gui.keyboard_window import KeyboardDialog
 from .widgets import StyledToolTip, StyledPopup
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class AppFrame(ctk.CTkFrame):
     def __init__(self, master, settings: dict):
         super().__init__(master)
         self.settings = settings
+        self.modal = None
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=0)
@@ -68,6 +70,8 @@ class AppFrame(ctk.CTkFrame):
         self.dxvk_var = ctk.BooleanVar(value=self.settings["Launcher"]["direct_feature_enabled"])
         self.update_var = ctk.BooleanVar(value=self.settings["Launcher"]["auto_check_update"])
         self.theme_var = ctk.StringVar(value=self.settings["Launcher"]["gui_theme"])
+        self.key_var = ctk.StringVar(value=self.settings["Launcher"]["keybind"]["name"])
+        self.key_code_var = ctk.StringVar(value=self.settings["Launcher"]["keybind"]["code"])
 
         # Themes
         self.theme_subtitle = ctk.CTkLabel(self, text="Theme", font=ctk.CTkFont(size=18))
@@ -86,13 +90,22 @@ class AppFrame(ctk.CTkFrame):
             "Save your changes and restart the app to apply them."
         ))
 
+        # Keybind
+        self.keybind_subtitle = ctk.CTkLabel(self, text="Menu Key", font=ctk.CTkFont(size=18))
+        self.keybind_subtitle.grid(row=2, column=0, padx=25, pady=(15, 5), sticky="w")
+
+        self.keybind_button = ctk.CTkButton(self, text="Change Key", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.open_modal())
+        self.keybind_button.configure(width=123, height=38, corner_radius=8)
+        self.keybind_button.grid(row=3, column=0, padx=25, pady=5, sticky="w")
+        StyledToolTip(self.keybind_button, message="The key used to open the ReShade menu in-game.")
+
         # Integration/Features
         self.integration_subtitle = ctk.CTkLabel(self, text="Integration/Features", font=ctk.CTkFont(size=18))
-        self.integration_subtitle.grid(row=2, column=0, padx=25, pady=(15, 5), sticky="w")
+        self.integration_subtitle.grid(row=4, column=0, padx=25, pady=(15, 5), sticky="w")
     
         self.switch_xxmi = ctk.CTkSwitch(self, text="XXMI", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False, command=lambda: self.switch_toogle_xxmi())
         self.switch_xxmi.configure(switch_width=36, switch_height=20, variable=self.xxmi_var)
-        self.switch_xxmi.grid(row=3, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_xxmi.grid(row=5, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_xxmi, message = (
             "Enabled: Integrates ReShade settings with the XXMI Launcher.\n"
             "Disabled: Leaves the XXMI Launcher unchanged.\n"
@@ -101,7 +114,7 @@ class AppFrame(ctk.CTkFrame):
 
         self.switch_dxvk = ctk.CTkSwitch(self, text="DirectX", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_dxvk.configure(switch_width=36, switch_height=20, variable=self.dxvk_var)
-        self.switch_dxvk.grid(row=4, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_dxvk.grid(row=6, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_dxvk, message = (
             "Enabled: Start the game using the DirectX 11 graphics API.\n"
             "Disabled: Start the game using the default graphics API.\n"
@@ -110,7 +123,7 @@ class AppFrame(ctk.CTkFrame):
 
         self.switch_addon = ctk.CTkSwitch(self, text="Reshade+", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_addon.configure(switch_width=36, switch_height=20, variable=self.addon_var)
-        self.switch_addon.grid(row=5, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_addon.grid(row=7, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_addon, message = (
             "Enabled: Switches to the enhanced ReShade build with Addon support.\n"
             "Disabled: Keeps the regular ReShade version active.\n"
@@ -119,7 +132,7 @@ class AppFrame(ctk.CTkFrame):
 
         self.switch_update = ctk.CTkSwitch(self, text="Check for updates", font=ctk.CTkFont(family="Verdana", size=15), onvalue=True, offvalue=False)
         self.switch_update.configure(switch_width=36, switch_height=20, variable=self.update_var)
-        self.switch_update.grid(row=6, column=0, padx=25, pady=(10, 5), sticky="w")
+        self.switch_update.grid(row=8, column=0, padx=25, pady=(10, 5), sticky="w")
         StyledToolTip(self.switch_update, message = (
             "Enabled: The app will automatically check for updates at startup.\n"
             "Disabled: The app will not check for updates automatically.\n"
@@ -128,16 +141,16 @@ class AppFrame(ctk.CTkFrame):
 
         # XXMI Path
         self.config_file = ctk.CTkLabel(self, text="XXMI Launcher Path", font=ctk.CTkFont(size=18))
-        self.config_file.grid(row=7, column=0, padx=25, pady=(15, 5), sticky="w")
+        self.config_file.grid(row=9, column=0, padx=25, pady=(15, 5), sticky="w")
 
         self.xxmi_path = ctk.CTkEntry(self, placeholder_text="C:/Path/to/XXMI Launcher", font=ctk.CTkFont(family="Verdana", size=14))
         self.xxmi_path.configure(width=478, height=38, corner_radius=8, state="disabled", fg_color="#333333", border_color="#333333")
-        self.xxmi_path.grid(row=8, column=0, padx=25, pady=5, sticky="w")
+        self.xxmi_path.grid(row=10, column=0, padx=25, pady=5, sticky="w")
         StyledToolTip(self.xxmi_path, message = "Usually located in the \"AppData/Roaming/XXMI Launcher/Resources/Bin/\" or \"AppData/Roaming/XXMI Launcher/\".")
 
         self.browser_button = ctk.CTkButton(self, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.xxmi_path))
         self.browser_button.configure(width=123, height=38, corner_radius=8, state="disabled", fg_color="#222222")
-        self.browser_button.grid(row=8, column=1, padx=(0, 20), pady=5, sticky="w")
+        self.browser_button.grid(row=10, column=1, padx=(0, 20), pady=5, sticky="w")
 
         self.switch_toogle_xxmi()
     
@@ -158,6 +171,12 @@ class AppFrame(ctk.CTkFrame):
             self.xxmi_file_path = filename
             widget.delete(0, "end")
             widget.insert(0, filename)
+
+    def open_modal(self):
+        if self.modal is None or not self.modal.winfo_exists():
+            self.modal = KeyboardDialog(self, self.key_var, self.key_code_var)
+        else:
+            self.modal.focus()
 
 
 class SettingsDialog(ctk.CTkToplevel):
@@ -219,11 +238,14 @@ class SettingsDialog(ctk.CTkToplevel):
         update_enabled = self.app_content_frame.update_var.get()
         theme_options = self.app_content_frame.theme_var.get()
         xxmi_config_path = self.app_content_frame.xxmi_path.get().strip()
+        keybind_name = self.app_content_frame.key_var.get()
+        keybind_code = self.app_content_frame.key_code_var.get()
 
         self.settings["Script"]["xxmi_dir"] = xxmi_config_path
         self.settings["Launcher"]["reshade_feature_enabled"] = reshade_enabled
         self.settings["Launcher"]["auto_check_update"] = update_enabled
         self.settings["Launcher"]["direct_feature_enabled"] = direct_enabled
+        self.settings["Launcher"]["keybind"] = {"name": keybind_name, "code": keybind_code}
 
         if self.settings["Launcher"]["gui_theme"] != theme_options:
             self.settings["Launcher"]["gui_theme"] = theme_options
