@@ -117,15 +117,17 @@ class ReshadeSetup():
         logger.info(f"All launcher files have been successfully verified!")
         return {"status": True}
 
-    def verify_system(self):
+    def verify_system(self, required_files: bool = True):
         validation_items = [
                 ("ReShade.ini", self.reshade_src, "file"),
-                ("Shaders folder", self.shaders_src, "dir"),
                 ("ReShade64.dll", self.reshade_dll, "file"),
                 ("ReShade64.json", self.reshade_config, "file"),
                 ("ReShade64_XR.json", self.reshade_xr_config, "file")
             ]
-        
+
+        if required_files:
+            validation_items.insert(1, ("Shaders folder", self.shaders_src, "dir"))
+
         if self.xxmi_enabled:
             validation_items.append(("XXMI Launcher", self.xxmi_src, "xxmi"))
 

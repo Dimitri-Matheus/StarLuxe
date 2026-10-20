@@ -36,6 +36,9 @@ def get_version(size=4):
     else:
         return "0.0.0"
 
+class DownloadCancelled(Exception):
+    pass
+
 
 def sync_metadata(repo_owner, repo_name):
     remote_url = f"https://raw.githubusercontent.com/{repo_owner}/{repo_name}/refs/heads/main/script/Presets/metadata.json"
@@ -122,6 +125,9 @@ def download_from_github(repo_owner, repo_name, resource, selected_preset, downl
             "status": True,
             "message": "Download completed successfully!"
         }
+
+    except DownloadCancelled:
+        raise
     
     except tuple(validation_items.keys()) as e:
         error_type = type(e)
@@ -199,6 +205,10 @@ def download_dependencies(directory, progress_callback=None):
         return {
             "status": True
         }
+
+    except DownloadCancelled:
+        file_path.unlink(missing_ok=True)
+        raise
 
     except tuple(validation_items.keys()) as e:
         error_type = type(e)

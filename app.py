@@ -277,7 +277,7 @@ class ReshadePage(BasePage):
             if isinstance(response, dict):
                 self.after(1000, lambda: self.download_result(response))
             return response
-        DownloadDialog(self.controller, "Downloading Presets", False, download_task)
+        DownloadDialog(self.controller, "Downloading Presets", download_task)
 
     def download_result(self, response):
         if response["status"]:
@@ -387,8 +387,9 @@ if __name__ == "__main__":
     ctk.set_default_color_theme(themes.load_theme(settings["Launcher"]["gui_theme"]))
 
     app = Starluxe(settings)
+    StyledPopup.main_window = app
     setup_system = ReshadeSetup(settings, "", settings["Launcher"]["xxmi_feature_enabled"])
-    result_system = setup_system.verify_system()
+    result_system = setup_system.verify_system(required_files=settings["Launcher"]["auto_download"])
     result_update = check_for_updates("Dimitri-Matheus", settings["Launcher"]["auto_check_update"])
     sync_metadata(settings["Account"]["github_name"], settings["Account"]["repository_name"])
 
@@ -405,6 +406,6 @@ if __name__ == "__main__":
         if result_system.get("error_type") == "shaders":
             def download_task(progress_callback):
                 return download_dependencies(settings["Packages"]["download_dir"], progress_callback)
-            DownloadDialog(app, "Downloading Dependencies", True, download_task)
+            DownloadDialog(app, "Downloading Dependencies", download_task)
 
     app.mainloop()

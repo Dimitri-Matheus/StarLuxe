@@ -48,6 +48,14 @@ class StyledPopup(CTkMessagebox):
         }
 
         default_style.update(kwargs)
+        master = default_style.get("master", self.main_window)
+        try:
+            if master is not None and master.winfo_width() <= 1:
+                master = None
+        except Exception:
+            master = None
+        default_style["master"] = master
+
         super().__init__(**default_style)
 
         try:
@@ -55,3 +63,17 @@ class StyledPopup(CTkMessagebox):
                 self.title_label.configure(fg_color=default_style["fg_color"])
         except Exception:
             pass
+
+
+def center_window(window, master, width, height):
+    if master is not None:
+        master = master.winfo_toplevel()
+
+    if master is not None and master.winfo_width() > 1:
+        x = master.winfo_rootx() + (master.winfo_width() - width) // 2
+        y = master.winfo_rooty() + (master.winfo_height() - height) // 2
+    else:
+        x = (window.winfo_screenwidth() - width) // 2
+        y = (window.winfo_screenheight() - height) // 2
+
+    window.geometry(f"{width}x{height}+{x}+{y}")

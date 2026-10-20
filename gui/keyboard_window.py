@@ -4,6 +4,7 @@ from tkinter import *
 import customtkinter as ctk
 import logging
 from utils.path import resource_path
+from gui.widgets import center_window
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ class KeyboardDialog(ctk.CTkToplevel):
         self.captured_key_code = None
 
         self.title("Select Key")
-        self.geometry("400x200")
+        center_window(self, master, 400, 200)
         self.resizable(width=False, height=False)
         self.grab_set()
 

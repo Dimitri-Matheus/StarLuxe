@@ -9,6 +9,7 @@ config_path = resource_path("settings.json")
 default = {
     "Launcher": {
         "auto_check_update": True,
+        "auto_download": True,
         "gui_theme": "Default",
         "keybind": {
             "name": "Insert",
