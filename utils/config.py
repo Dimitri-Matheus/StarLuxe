@@ -71,7 +71,8 @@ default = {
             "folder": "",
             "exe": "Endfield.exe",
             "subpath": "",
-            "arguments": ""
+            "arguments": "",
+            "launcher_path": ""
         },
     }
 }

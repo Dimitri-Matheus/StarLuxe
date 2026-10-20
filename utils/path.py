@@ -1,4 +1,5 @@
 """Utils for everything related path to a resource"""
+
 import os, sys
 from pathlib import Path
 

@@ -5,6 +5,7 @@ from pathlib import Path
 from pymem import Pymem
 from pymem.process import inject_dll_from_path
 from utils.keybind import KeyboardManager
+from utils.gryphlink import find_game_executable, start_game_with_launcher
 from utils.path import relative_path
 # from config import load_config
 
@@ -78,6 +79,43 @@ class ReshadeSetup():
             "status": True,
             "game_code": self.game_code
         }
+
+    def verify_launcher(self):
+        if self.xxmi_enabled or "launcher_path" not in self.game_info:
+            return {"status": True}
+
+        launcher_folder = self.game_info["launcher_path"].strip()
+
+        if not launcher_folder:
+            logger.error(f"Launcher path not configured for {self.game_code}")
+            return {
+                "status": False,
+                "message": "Please set the game launcher:\nRight click on the game → Edit → Launcher Folder",
+                "error_type": "launcher"
+            }
+
+        launcher_exe = (Path(launcher_folder) / "Launcher.exe").resolve()
+        if not launcher_exe.is_file():
+            logger.error(f"Launcher executable not found: {launcher_exe}")
+            return {
+                "status": False,
+                "message": "Game launcher not found!",
+                "error_type": "launcher"
+            }
+
+        games_exe = find_game_executable(launcher_exe)
+        if games_exe is None:
+            logger.error(f"Games.exe not found in launcher folder: {launcher_exe.parent}")
+            return {
+                "status": False,
+                "message": "Game launcher version not found!",
+                "error_type": "launcher"
+            }
+        
+        self.launcher_exe = launcher_exe
+        self.launcher_games_exe = games_exe
+        logger.info(f"All launcher files have been successfully verified!")
+        return {"status": True}
 
     def verify_system(self):
         validation_items = [
@@ -181,19 +219,48 @@ class ReshadeSetup():
         try:
             self.xxmi_integration(self.game_code)
             if not self.xxmi_enabled:
-                args = [str(self.exe_path)]
-                if self.direct_enabled:
-                    args.append("-force-d3d11")
+                if hasattr(self, "launcher_games_exe"):
+                    game_running = False
+                    try:
+                        Pymem(self.exe_path.name)
+                        game_running = True
+                    except Exception:
+                        pass
 
-                game_args = self.game_info.get("arguments", "")
-                if game_args:
-                    args.extend(shlex.split(game_args))
+                    if game_running:
+                        logger.info(f"Game {self.exe_path.name} is already running, skipping launch...")
+                        return {"message": "Game is already running!"}
+                    
+                    else:
+                        extra_args = []
+                        if self.direct_enabled:
+                            extra_args.append("-force-d3d11")
+                        game_args = self.game_info.get("arguments", "")
+                        if game_args:
+                            extra_args.extend(shlex.split(game_args))
 
-                reshade_env = os.environ.copy()
-                reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"
+                        start_game_with_launcher(
+                            self.launcher_games_exe,
+                            self.exe_path,
+                            cwd=self.game_dir,
+                            args=" ".join(extra_args),
+                            env_extra={"RESHADE_DISABLE_LOADING_CHECK": "1"},
+                        )
 
-                subprocess.Popen(args, cwd=str(self.game_dir), env=reshade_env)
-                logger.info(f"Started {self.exe_path.name} manually")
+                else:
+                    args = [str(self.exe_path)]
+                    if self.direct_enabled:
+                        args.append("-force-d3d11")
+
+                    game_args = self.game_info.get("arguments", "")
+                    if game_args:
+                        args.extend(shlex.split(game_args))
+
+                    reshade_env = os.environ.copy()
+                    reshade_env["RESHADE_DISABLE_LOADING_CHECK"] = "1"
+
+                    subprocess.Popen(args, cwd=str(self.game_dir), env=reshade_env)
+                    logger.info(f"Started {self.exe_path.name} manually")
             else:
                 logger.info(f"Waiting for XXMI to launch {self.exe_path.name}...")
 
@@ -219,7 +286,7 @@ class ReshadeSetup():
                 raise RuntimeError(f"Game process {self.exe_path.name} did not start within {timeout} seconds...")
 
         except Exception as e:
-            logger.error(f"Injection process failed: {e}")
+            logger.exception(f"Injection process failed: {e}")
             return {
                 "message": (
                     "\nFailed to configure ReShade!\n"

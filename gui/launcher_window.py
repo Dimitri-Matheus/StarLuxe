@@ -117,11 +117,20 @@ class LauncherDialog(ctk.CTkToplevel):
             StyledPopup(message="Please set the game folder first in Settings")
             return
 
+        setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
+    
         self.settings["Launcher"]["last_played_game"] = game_code
         save_config(self.settings)
 
         setup = ReshadeSetup(self.settings, folder, self.settings["Launcher"]["xxmi_feature_enabled"])
         setup.verify_installation()
+
+        result = setup.verify_launcher()
+        if not result["status"]:
+            name = game_code.replace("_", " ").title()
+            StyledPopup(title="Error", message=result["message"].replace("Game", name))
+            return
+    
         setup.addon_support()
         setup.dxvk_support()
 
@@ -256,6 +265,8 @@ class InputGame(ctk.CTkToplevel):
         self.callback = callback
         self.game_edit = game_edit
         self.icon_source = None
+        game_data = self.settings["Games"].get(game_edit, {}) if game_edit else {}
+        self.launcher = "launcher_path" in game_data
 
         self.title("New Game")
         self.geometry("520x480")
@@ -307,12 +318,28 @@ class InputGame(ctk.CTkToplevel):
             "Note: Make sure to select the correct .exe file."
         ))
 
-        self.browser_button = ctk.CTkButton(scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
-        self.browser_button.configure(width=123, height=38, corner_radius=8)
-        self.browser_button.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
+        self.browser_button_1 = ctk.CTkButton(scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_file(self.path_entry, self.name_input))
+        self.browser_button_1.configure(width=123, height=38, corner_radius=8)
+        self.browser_button_1.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
 
-        self.text_3 = ctk.CTkLabel(scrollable_frame, text="Launcher Arguments (Optional)", font=ctk.CTkFont(size=18))
-        self.text_3.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+        if self.launcher:
+            self.text_3 = ctk.CTkLabel(scrollable_frame, text="Launcher Folder", font=ctk.CTkFont(size=18))
+            self.text_3.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
+
+            self.launcher_path = ctk.CTkEntry(scrollable_frame, placeholder_text="C:/Program Files...", font=ctk.CTkFont(family="Verdana", size=14))
+            self.launcher_path.configure(width=300, height=38, corner_radius=8)
+            self.launcher_path.grid(row=r, column=0, padx=25, pady=5, sticky="ew")
+            StyledToolTip(self.launcher_path, message=(
+                "Path to the folder containing the launcher executable.\n"
+                "Note: Make sure to select the correct folder."
+            ))
+
+            self.browser_button_2 = ctk.CTkButton(scrollable_frame, text="Browser", font=ctk.CTkFont(family="Verdana", size=14, weight="bold"), command=lambda: self.select_folder(self.launcher_path))
+            self.browser_button_2.configure(width=123, height=38, corner_radius=8)
+            self.browser_button_2.grid(row=r, column=1, padx=(0, 20), pady=5, sticky="e"); r += 1
+
+        self.text_4 = ctk.CTkLabel(scrollable_frame, text="Launcher Arguments (Optional)", font=ctk.CTkFont(size=18))
+        self.text_4.grid(row=r, column=0, padx=25, pady=(15, 5), sticky="w"); r += 1
 
         self.launcher_args = ctk.CTkEntry(scrollable_frame, placeholder_text="...", font=ctk.CTkFont(family="Verdana", size=14))
         self.launcher_args.configure(height=38, corner_radius=8)
@@ -344,8 +371,13 @@ class InputGame(ctk.CTkToplevel):
             self.icon_preview.configure(image=loaded_icon)
             self.name_input.insert(0, game_data.get("display_name", game_edit.replace("_", " ").title()))
             self.path_entry.insert(0, str(full_exe))
+
             if game_data.get("arguments"):
                 self.launcher_args.insert(0, game_data.get("arguments"))
+
+            if self.launcher and game_data.get("launcher_path"):
+                self.launcher_path.insert(0, game_data["launcher_path"])
+            
             logger.info("Data loaded successfully!")
 
     def select_file(self, path, name):
@@ -357,6 +389,12 @@ class InputGame(ctk.CTkToplevel):
             path.insert(0, filename)
             name.delete(0, "end")
             name.insert(0, display_name)
+
+    def select_folder(self, path):
+        foldername = filedialog.askdirectory(title='Open folder', initialdir='/')
+        if foldername:
+            path.delete(0, "end")
+            path.insert(0, foldername)
 
     def select_icon(self):
         icon_path = filedialog.askopenfilename(parent=self, title="Select Your Icon", initialdir="/", defaultextension=".png", filetypes=[("Image Files", "*.png *.jpg *.jpeg *.ico"), ("PNG files", "*.png"), ("JPEG files", "*.jpg *.jpeg"), ("All files", "*.*")])
@@ -425,6 +463,14 @@ class InputGame(ctk.CTkToplevel):
             "subpath": subpath,
             "arguments": str(game_args)
         }
+
+        if self.launcher:
+            launcher_folder = self.launcher_path.get().strip()
+            if launcher_folder and not (Path(launcher_folder) / "Launcher.exe").is_file():
+                StyledPopup(message="Launcher not found!")
+                return
+            settings_data["launcher_path"] = launcher_folder
+
         games = self.settings.setdefault("Games", {})
 
         if not self.game_edit:
