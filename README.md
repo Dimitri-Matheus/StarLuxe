@@ -4,6 +4,10 @@
   <img src="https://github.com/user-attachments/assets/1a7ee5a5-b672-4b08-b90d-ce36272a675c" alt="StarLuxe Launcher Logo ou Preview" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/Dimitri-Matheus/StarLuxe/releases/latest"><img src="https://img.shields.io/github/v/release/Dimitri-Matheus/StarLuxe?style=for-the-badge&label=Get%20StarLuxe&labelColor=1f1f1f&color=E73B3C" height="28" alt="Get the latest StarLuxe release"></a> <a href="https://github.com/Dimitri-Matheus/StarLuxe/releases"><img src="https://img.shields.io/github/downloads/Dimitri-Matheus/StarLuxe/total?style=for-the-badge&label=Total%20downloads&labelColor=1f1f1f&color=1DBD73" height="28" alt="Total file downloads"></a> <a href="https://github.com/Dimitri-Matheus/StarLuxe/releases/latest"><img src="https://img.shields.io/github/downloads/Dimitri-Matheus/StarLuxe/latest/total?style=for-the-badge&label=Latest%20release%20downloads&labelColor=1f1f1f&color=4B9BE5" height="28" alt="Latest release downloads"></a>
+</p>
+
 
 ## How to use
 Download the [latest version](https://github.com/Dimitri-Matheus/HSR-Script/releases) and extract the file. Then, run `StarLuxe.exe`
